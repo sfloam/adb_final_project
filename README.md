@@ -83,17 +83,15 @@ Advanced Database Systems Final Project
                         W(T4,x2,21)]] W(T3,x4,23)
                         — T4 will abort because it’s younger
 #Design Specifications#
-- [ ] Program should consist of two parts: 
-      - [ ] a single transaction manager that translates read and write requests on variables to read and write requests on copies using   
-            the available copy algorithm described in the notes. 
-      - [ ] The transaction manager never fails. (Having a single global transaction manager that never fails is a simplification of 
-            reality, but it is not too hard to get rid of that assumption by using a shared disk configuration.)
+
+- [ ] Program should consist of two parts:
+  - [ ] a single transaction manager that translates read and write requests on variables to read and write requests on copies using the available copy algorithm described in the notes. 
+  - [ ] The transaction manager never fails. (Having a single global transaction manager that never fails is a simplification of reality, but it is not too hard to get rid of that assumption by using a shared disk configuration.)
 - [ ] If the TM requests a read for transaction T and cannot get it due to failure, the TM should try another site (all in the same step).
-      - [ ] If no relevant site is available, then T must wait. 
-      - [ ] This applies to read-only transactions as well which must have access to the latest version of each variable before the 
-            transaction begins.
-      - [ ] T may also have to wait for conflicting locks.
-            - [ ] Thus the TM may accumulate an input command for T and will try it on the next tick (time moment). 
+  - [ ] If no relevant site is available, then T must wait. 
+  - [ ] This applies to read-only transactions as well which must have access to the latest version of each variable before the transaction begins.
+  - [ ] T may also have to wait for conflicting locks.
+    - [ ] Thus the TM may accumulate an input command for T and will try it on the next tick (time moment). 
 - [ ] While T is blocked (whether waiting for a lock to be released or a failure to be cleared), our test files will emit no no operations 
       for T so the buffer size for messages from any single transaction can be of size 1.
 - [ ] If a site fails and recovers, the DM would normally perform local recovery first (perhaps by asking the TM about transactions that 
