@@ -105,3 +105,19 @@ Advanced Database Systems Final Project
       distribution and data values. 
 - [ ] Finally, each read that occurs should show the value read.
 
+
+**Code Structure**
+- [ ] Author of the function should also be listed. 
+- [ ] Should see the major components, relationships between the components, and communication between components. This should work recursively within components.
+- [ ] A figure showing interconnections and no more than three pages of text would be helpful.
+- [ ] The submitted code similarly should include as a header:
+      - The author
+      - The date
+      - The general description of the function
+      - The inputs
+      - The outputs
+      - The side effects.
+- [ ] Provide a few testing scripts in plain text to the grader in the format above and say what you believe will happen in each
+test.
+- [x] You should store you entire repository in git, enabling the graders to trace your progress.
+- [ ] Finally, you will use reprozip to make your project reproducible even across different architectures.
