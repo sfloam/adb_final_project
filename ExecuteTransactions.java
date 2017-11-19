@@ -2,6 +2,8 @@ import java.util.Scanner;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.File;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class ExecuteTransactions{
 	public static void main (String [] args){
@@ -26,9 +28,26 @@ public class ExecuteTransactions{
             	try {
             		File file = new File(file_name);
             		Scanner fileScanner = new Scanner (file);
+            		TransactionManager tm = new TransactionManager();
 	        		while(fileScanner.hasNextLine()){
 	        			String line = fileScanner.nextLine();
-	        			if (debugFlag){
+						if (debugFlag){
+        					System.out.println(line);
+        				}
+
+	        			if (isDumpOutput(line) || (isComment(line)|| isEmpty(line))){
+	        				if (isDumpOutput(line)){
+		        				while (fileScanner.hasNextLine() && !isComment(fileScanner.nextLine())){
+		        					if (debugFlag){
+		        						System.out.println(line);
+		        					}
+		        				}
+		        			}
+	        			}
+
+	        			else { 
+
+	        				//TODO: Read Transactions
 	        				System.out.println(line);
 	        			}
 	        		}
@@ -38,8 +57,28 @@ public class ExecuteTransactions{
             		System.out.println("File not found!");
             	}
             }
+
             else {
 				System.out.println("You entered an invalid argument or did not provide a data file!");
 			}
 	}
+
+	public static boolean isComment(String line){
+		Pattern commentPattern = Pattern.compile("//");
+	    Matcher commentMatcher = commentPattern.matcher(line);
+		return commentMatcher.find();
+	}
+	
+	public static boolean isDumpOutput(String line){
+		Pattern dumpOutputPattern = Pattern.compile("=== output of dump");
+	    Matcher dumpOutputMatcher = dumpOutputPattern.matcher(line);
+		return dumpOutputMatcher.find();
+	}
+
+	public static boolean isEmpty(String line){
+		return line.equals("");
+	}
+
+
+
 }
