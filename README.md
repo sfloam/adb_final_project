@@ -82,7 +82,8 @@ Advanced Database Systems Final Project
                   W(T3, x5,21)
                         W(T4,x2,21)]] W(T3,x4,23)
                         — T4 will abort because it’s younger
-#Design Specifications#
+
+**Design Specifications**
 
 - [ ] Program should consist of two parts:
   - [ ] a single transaction manager that translates read and write requests on variables to read and write requests on copies using the available copy algorithm described in the notes. 
