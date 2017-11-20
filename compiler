@@ -1,0 +1,6 @@
+#!/bin/bash
+javac LockTable.java
+javac ExecuteTransactions.java
+javac Site.java
+javac TransactionManager.java
+javac Transaction.java
