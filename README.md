@@ -8,7 +8,7 @@ Advanced Database Systems Final Project
 - [x] Even indexed variables are at all sites
 - [x] Each variable xi is initialized to value 10i
 - [x] Each site has an independent lock table
-- [ ] If a site fails, the lock table is erased
+- [x] If a site fails, the lock table is erased
 
 **Algorithm Requirements**
 - [ ] Implement the available copies approach to replication using 2PL (using read and write locks) at each site and validation at commit 
