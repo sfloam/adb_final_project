@@ -24,7 +24,7 @@ public class Site {
 		return "Site_"+id;
 	}
 
-	public void clearTable(){
+	public void fail(){
 		this.lt = null;
 	}
 
