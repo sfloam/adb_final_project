@@ -5,6 +5,7 @@ public class Site{
 	public LockTable lt;
 	public int id;
 
+
 	public Site (int id){
 		this.id = id;
 		lt = new LockTable(id);
@@ -25,6 +26,10 @@ public class Site{
 
 	public String toString(){
 		return "Site_"+id;
+	}
+
+	public void clearTable(){
+		lt = null;
 	}
 
 }
