@@ -32,7 +32,7 @@ Advanced Database Systems Final Project
 - [ ] System supports several operations in each step, though at most only one per transaction. 
 - [ ] If operations is blocked due to conflicting locks, that does not affect the operations of other transactions.
       You may assume that all operations on a single line occur concurrently. 
-- [ ] When running our tests, ensure that operations occurring concurrently don’t conflict with one another. 
+- [ ] (REMOVED from syllabus) When running our tests, ensure that operations occurring concurrently don’t conflict with one another.
 - [ ] Ensure that when a transaction is waiting, it will not receive another operation.
 - [ ] If an operation for T1 is waiting for a lock held by T2, then in the same time step when T2 commits, the operation for T1 proceeds 
       if there is no other lock request ahead of it. 
