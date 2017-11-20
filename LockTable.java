@@ -2,7 +2,7 @@
 import java.util.concurrent.ConcurrentHashMap;
 
 
-public class LockTable extends ConcurrentHashMap<String, String>{
+public class LockTable extends ConcurrentHashMap<Integer, Integer>{
 	int id;
 
 	LockTable (int id){

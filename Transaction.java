@@ -1,36 +1,47 @@
 
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 public class Transaction {
 	public int age;
 	public String transName;
+	public int id;
 	public boolean readLock;
 	public boolean writeLock;
-	
+	public Queue<ArrayList<String>> operations;
 
-	public Transaction(String transactionStr, String transName){
-		this.age = 1;
-		this.transName = transName;
+
+	public Transaction(int id){
+		this.age = 0;
+		this.transName = "T"+id;
+		this.id = id;
 		readLock = false; 
 		writeLock = false; 
+		this.operations = new LinkedList<ArrayList<String>> ();
 	}
 
 	public int compareTo(Transaction other_transaction){
-		int res = this.age - other_transaction.age;
+		int res = this.id - other_transaction.id;
 		return res;
 	}
 
-	public String read(String varName, LockTable table){
+
+	public String read(Integer varName, LockTable table){
 		if (!readLock){
-			return table.get(varName);
+			return ""+table.get(varName);
 		}
-		else {
-			return "locked";
-		}
-		
+		return "locked";
 	}
 
-	public void write(String varName, int value, LockTable table){
+	public void write(Integer varName, Integer value, LockTable table){
 		if (!writeLock){
-			table.set(varName, value);
+			table.put(varName, value);
 		}
+	}
+
+	public String toString(){
+
+		return "T"+this.id;
 	}
 }

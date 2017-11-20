@@ -4,6 +4,10 @@ import java.io.IOException;
 import java.io.File;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class ExecuteTransactions{
 	public static void main (String [] args){
@@ -28,7 +32,9 @@ public class ExecuteTransactions{
             	try {
             		File file = new File(file_name);
             		Scanner fileScanner = new Scanner (file);
+            		
             		TransactionManager tm = new TransactionManager();
+	        		
 	        		while(fileScanner.hasNextLine()){
 	        			String line = fileScanner.nextLine();
 						if (debugFlag){
@@ -47,8 +53,12 @@ public class ExecuteTransactions{
 
 	        			else { 
 
-	        				//TODO: Read Transactions
-	        				System.out.println(line);
+	        				//Reads transactions and parses them so that they are assignable 
+	        				line = line.replaceAll("[(),]"," ");
+	        				ArrayList<String> lineArray = new ArrayList<String> (Arrays.asList(line.split(" ")));
+
+	        				//Gets transactions and sends them to the transaction manager for assignments
+	        				tm.assignTransaction(lineArray);
 	        			}
 	        		}
             	}
