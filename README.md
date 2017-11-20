@@ -4,10 +4,10 @@ Advanced Database Systems Final Project
 **Data Requirements**
 - [x] Create 20 distinct variables x1, ..., x20 (the numbers between 1 and 20 will be referred to as indexes below)
 - [x] Create 10 sites numbered 1 to 10. A copy is indicated by a dot. Thus, x6.2 is the copy of variable x6 at site 2. 
-- [ ] Ensure odd indexed variables are at one site each (1 + index mod 10) --> x3 and x13 are both at site 4
-- [ ] Even indexed variables are at all sites
-- [ ] Each variable xi is initialized to value 10i
-- [ ] Each site has an independent lock table
+- [x] Ensure odd indexed variables are at one site each (1 + index mod 10) --> x3 and x13 are both at site 4
+- [x] Even indexed variables are at all sites
+- [x] Each variable xi is initialized to value 10i
+- [x] Each site has an independent lock table
 - [ ] If a site fails, the lock table is erased
 
 **Algorithm Requirements**
