@@ -49,7 +49,8 @@ public class TransactionManager {
 			}
 		}
 
-		else if (transaction.get(0).equalsIgnoreCase("W") || transaction.get(0).equalsIgnoreCase("R")){
+		//not complete
+		else if (transaction.get(0).equalsIgnoreCase("W")){
 			int index;
 			String transName = transaction.get(1);
 			boolean alreadyFound = false;
@@ -59,14 +60,47 @@ public class TransactionManager {
 					t.operations.add(transaction);
 					//TODO: Execute INstruction Operation
 					executeInstruction(transaction);
-					alreadyFound = true;
 					break;
 				}	
 			}
-
 		}
+
+		//not complete
+		else if (transaction.get(0).equalsIgnoreCase("R")){
+			int index;
+			String transName = transaction.get(1);
+			boolean alreadyFound = false;
+			
+			for (Transaction t : running){
+				if ((t.transName).equals(transName)) {
+					t.operations.add(transaction);
+					//TODO: Execute INstruction Operation
+					executeInstruction(transaction);
+					break;
+				}	
+			}
+		}
+
+		//may need to address missing sites and null pointers later on
+		else if (transaction.get(0).equalsIgnoreCase("fail")){
+			String siteID = Integer.parseInt(transaction.get(1));
+			sites.get(sitesID).fail();
+		}
+
+		//not complete
 		else if (transaction.get(0).equalsIgnoreCase("end")){
 			
+		}
+		
+		//not complete
+		else if (transaction.get(0).equalsIgnoreCase("dump")){
+
+		}
+
+		//not complete
+		else {
+
+			System.out.println("Something wasn't covered: "+ transaction);
 		}
 	}
 
