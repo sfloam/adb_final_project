@@ -1,24 +1,20 @@
 import java.util.HashMap;
 
-public class Site{
-
-	public LockTable lt;
+public class Site {
 	public int id;
-
+	public LockTable lt;
 
 	public Site (int id){
 		this.id = id;
-		lt = new LockTable(id);
+		this.lt = new LockTable(id);
 		
 		for (int i = 1; i < 21; i++){
 			if (i%2 == 0){
 				(this.lt).put(i, i*10);
 			}
 			
-			else {
-				if ((1+(i%10)) == this.id){
-					(this.lt).put(i, i*10);
-				}
+			else if ((1+(i%10)) == this.id){
+				(this.lt).put(i, i*10);
 			}
 		}
 
@@ -29,7 +25,7 @@ public class Site{
 	}
 
 	public void clearTable(){
-		lt = null;
+		this.lt = null;
 	}
 
 }
