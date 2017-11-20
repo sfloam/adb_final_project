@@ -1,16 +1,12 @@
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 
 
-public class LockTable extends ConcurrentHashMap<Integer, Integer>{
-	int id;
+public class LockTable extends HashMap<Integer, Integer> {
+	public int id;
 
 	LockTable (int id){
 		this.id = id;
 	}
 	
-	public String toString(){
-		return "LT_" + id;
-	}
-
 }

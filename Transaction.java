@@ -9,6 +9,8 @@ public class Transaction {
 	public int id;
 	public boolean readLock;
 	public boolean writeLock;
+
+	//used for rollbacks
 	public Queue<ArrayList<String>> operations;
 
 
@@ -23,9 +25,9 @@ public class Transaction {
 
 	public int compareTo(Transaction other_transaction){
 		int res = this.id - other_transaction.id;
+		System.out.println(this + " compared to " + other_transaction);
 		return res;
 	}
-
 
 	public String read(Integer varName, LockTable table){
 		if (!readLock){
@@ -41,7 +43,6 @@ public class Transaction {
 	}
 
 	public String toString(){
-
 		return "T"+this.id;
 	}
 }
