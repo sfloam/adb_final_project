@@ -3,7 +3,7 @@ Advanced Database Systems Final Project
 
 **Data Requirements**
 - [ ] Create 20 distinct variables x1, ..., x20 (the numbers between 1 and 20 will be referred to as indexes below)
-- [ ] Create 10 sites numbered 1 to 10. A copy is indicated by a dot. Thus, x6.2 is the copy of variable x6 at site 2. 
+- [x] Create 10 sites numbered 1 to 10. A copy is indicated by a dot. Thus, x6.2 is the copy of variable x6 at site 2. 
 - [ ] Ensure odd indexed variables are at one site each (1 + index mod 10) --> x3 and x13 are both at site 4
 - [ ] Even indexed variables are at all sites
 - [ ] Each variable xi is initialized to value 10i
