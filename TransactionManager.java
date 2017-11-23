@@ -1,11 +1,13 @@
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TransactionManager {
 
 	public LinkedList<Transaction> running;
 	public ArrayList<Site> sites;
+	public HashMap<Integer,Variable> vars;
 	public int age;
 
 
@@ -15,11 +17,20 @@ public class TransactionManager {
 		//May not need all of these
 		this.running = new LinkedList<Transaction>();
 		this.sites = new ArrayList<Site>();
+		this.vars = new HashMap<Integer,Variable>();
 		sites.add(null); //leaves site0 empty will make it easier later
+		
+		for (int x = 1; x < 21; x++){
+			vars.put(x, new Variable(x));
+			System.out.println(vars);
+		}
+
 		for (int x = 1; x < 11; x++){
 			sites.add(new Site(x));
 			System.out.println(sites.get(x).lt);
 		}
+
+
 
 		System.out.println(sites);
 		this.age = 0;
@@ -59,7 +70,7 @@ public class TransactionManager {
 				if ((t.transName).equals(transName)) {
 					t.operations.add(transaction);
 					//TODO: Execute INstruction Operation
-					executeInstruction(transaction);
+					executeWriteInstruction(transaction);
 					break;
 				}	
 			}
@@ -75,7 +86,7 @@ public class TransactionManager {
 				if ((t.transName).equals(transName)) {
 					t.operations.add(transaction);
 					//TODO: Execute INstruction Operation
-					executeInstruction(transaction);
+					executeReadInstruction(transaction);
 					break;
 				}	
 			}
@@ -83,8 +94,8 @@ public class TransactionManager {
 
 		//may need to address missing sites and null pointers later on
 		else if (transaction.get(0).equalsIgnoreCase("fail")){
-			String siteID = Integer.parseInt(transaction.get(1));
-			sites.get(sitesID).fail();
+			int siteID = Integer.parseInt(transaction.get(1));
+			sites.get(siteID).fail();
 		}
 
 		//not complete
@@ -104,8 +115,30 @@ public class TransactionManager {
 		}
 	}
 
-	public void executeInstruction(ArrayList<String> operation){
+	public void executeWriteInstruction(ArrayList<String> operation){
+		Integer varInt = Integer.parseInt(operation.get(2).replaceAll("x",""));
+		lockVariable(varInt); // variable name
+		updateLockTables(varInt);
+	}
+
+	public void lockVariable(Integer varInt){
+
+		if (this.vars.get(varInt).isLocked){
+			System.out.println("LOCKED");
+		}
+		else {
+			this.vars.get(varInt).isLocked = true;
+			System.out.println( "x"+varInt +" is not locked yet");
+		}
+	}
+
+	public void updateLockTables(Integer varInt){
 
 
 	}
+	public void executeReadInstruction(ArrayList<String> operation){
+
+	}
+
+
 }

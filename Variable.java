@@ -8,14 +8,13 @@ public class Variable {
 	public HashSet<Integer> correspondingTransactions;
 	public ArrayList<Integer> siteLocations;
 
-	public Variable (int id, int value, int transactionID){
+	public Variable (int id){
 		this.id = id;
-		this.value = value;
-		
+		this.value = id*10;
+		this.isLocked = false;
 		correspondingTransactions = new HashSet<Integer>();
-		correspondingTransactions.add(transactionID);
-
 		siteLocations = new ArrayList<Integer>();
+
 		if (id % 2 == 0){
 			for (int i = 1; i < 11; i++){
 				siteLocations.add(i); 
@@ -26,4 +25,7 @@ public class Variable {
 		}
 	}
 
+	public void addTransaction(int transactionID){
+		correspondingTransactions.add(transactionID);
+	}
 }
