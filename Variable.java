@@ -5,6 +5,7 @@ public class Variable {
 	public int id;
 	public int value;
 	public boolean isLocked;
+	public int previousTransactionID;
 	public HashSet<Integer> correspondingTransactions;
 	public ArrayList<Integer> siteLocations;
 
@@ -28,4 +29,6 @@ public class Variable {
 	public void addTransaction(int transactionID){
 		correspondingTransactions.add(transactionID);
 	}
+
+
 }

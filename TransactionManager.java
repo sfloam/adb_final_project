@@ -117,17 +117,20 @@ public class TransactionManager {
 
 	public void executeWriteInstruction(ArrayList<String> operation){
 		Integer varInt = Integer.parseInt(operation.get(2).replaceAll("x",""));
-		lockVariable(varInt); // variable name
+		Integer transInt = Integer.parseInt(operation.get(1).replaceAll("T",""));
+		lockVariable(varInt,transInt); // variable name, transactionID
 		updateLockTables(varInt);
 	}
 
-	public void lockVariable(Integer varInt){
+	public void lockVariable(Integer varInt, Integer transInt){
 
-		if (this.vars.get(varInt).isLocked){
+		if ((this.vars.get(varInt).isLocked) && (transInt != this.vars.get(varInt).previousTransactionID)){
 			System.out.println("LOCKED");
 		}
 		else {
 			this.vars.get(varInt).isLocked = true;
+			this.vars.get(varInt).previousTransactionID = transInt;
+			this.vars.get(varInt).addTransaction(transInt);
 			System.out.println( "x"+varInt +" is not locked yet");
 		}
 	}
