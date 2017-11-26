@@ -7,8 +7,9 @@ Advanced Database Systems Final Project
 - [x] Ensure odd indexed variables are at one site each (1 + index mod 10) --> x3 and x13 are both at site 4
 - [x] Even indexed variables are at all sites
 - [x] Each variable xi is initialized to value 10i
+- [ ] Ask Dennis if it is multiply - Each variable xi is initialized to value 10i
 - [x] Each site has an independent lock table
-- [x] If a site fails, the lock table is erased
+- [ ] If a site fails, the lock table is erased
 
 **Algorithm Requirements**
 - [ ] Implement the available copies approach to replication using 2PL (using read and write locks) at each site and validation at commit 

@@ -32,8 +32,9 @@ public class ExecuteTransactions {
             try {
                 File file = new File(file_name);
                 Scanner fileScanner = new Scanner(file);
-
-                TransactionManager tm = new TransactionManager();
+                
+                DataManager dm = new DataManager();
+                TransactionManager tm = new TransactionManager(dm);
 
                 while (fileScanner.hasNextLine()) {
                     String line = fileScanner.nextLine();
