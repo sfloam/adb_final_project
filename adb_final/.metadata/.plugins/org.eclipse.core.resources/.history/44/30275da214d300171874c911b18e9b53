@@ -106,11 +106,11 @@ public class TransactionManager {
 
     public void lockVariable(Integer varInt, Integer transInt) {
 
-        if ((dm.getVars().get(varInt).isLocked()) && (transInt != dm.getVars().get(varInt).getPreviousTransactionID())) {
+        if ((dm.getVars().get(varInt).isLocked()) && (transInt != dm.getVars().get(varInt).previousTransactionID)) {
             System.out.println("LOCKED");
         } else {
             dm.getVars().get(varInt).setLock();
-            dm.getVars().get(varInt).setPreviousTransactionID(transInt);
+            dm.getVars().get(varInt).previousTransactionID = transInt;
             dm.getVars().get(varInt).addTransaction(transInt);
             System.out.println("x" + varInt + " is not locked yet");
         }

@@ -2,19 +2,19 @@ import java.util.HashSet;
 import java.util.ArrayList;
 
 public class Variable {
-    private int id;
-    private int value;
-    private boolean lock;
-    private int previousTransactionID;
-    private HashSet<Integer> correspondingTransactions;
-    private ArrayList<Integer> siteLocations;
+    public int id;
+    public int value;
+    public boolean isLocked;
+    public int previousTransactionID;
+    public HashSet<Integer> correspondingTransactions;
+    public ArrayList<Integer> siteLocations;
 
     public Variable(int id) {
         this.id = id;
         this.value = id * 10;
         
         //does a transaction have a this variable
-        this.lock = false;
+        this.isLocked = false;
         
         //which transactions use this variable
         correspondingTransactions = new HashSet<Integer>();
@@ -38,35 +38,9 @@ public class Variable {
     public String toString() {
         return "[ID: " + id
                 + " Value: " + value
-                + " isLocked: " + lock
+                + " isLocked: " + isLocked
                 + " corTrans: " + correspondingTransactions
                 + " siteLocs: " + siteLocations + "]";
-    }
-    
-    public int getID() {
-    		return this.id;
-    }
-    public int getValue() {
-		return this.value;
-    }
-    public boolean isLocked() {
-    		return lock;
-    }
-    public void setLock() {
-    		this.lock = !this.lock;
-    }
-    public int getPreviousTransactionID() {
-    		return this.previousTransactionID;
-    }
-    public void setPreviousTransactionID(int previousTransactionID) {
-    		this.previousTransactionID = previousTransactionID;
-    }
-    public HashSet<Integer> getCorrespondingTransactions() {
-		return this.correspondingTransactions;
-    }
-    
-    public ArrayList<Integer> getSiteLocations(){
-    		return this.siteLocations;
     }
 
 }

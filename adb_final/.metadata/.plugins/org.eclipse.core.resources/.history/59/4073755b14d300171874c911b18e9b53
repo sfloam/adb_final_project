@@ -52,15 +52,11 @@ public class Variable {
     public boolean isLocked() {
     		return lock;
     }
-    public void setLock() {
-    		this.lock = !this.lock;
-    }
+    
     public int getPreviousTransactionID() {
     		return this.previousTransactionID;
     }
-    public void setPreviousTransactionID(int previousTransactionID) {
-    		this.previousTransactionID = previousTransactionID;
-    }
+    
     public HashSet<Integer> getCorrespondingTransactions() {
 		return this.correspondingTransactions;
     }

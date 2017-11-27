@@ -58,9 +58,7 @@ public class Variable {
     public int getPreviousTransactionID() {
     		return this.previousTransactionID;
     }
-    public void setPreviousTransactionID(int previousTransactionID) {
-    		this.previousTransactionID = previousTransactionID;
-    }
+    
     public HashSet<Integer> getCorrespondingTransactions() {
 		return this.correspondingTransactions;
     }

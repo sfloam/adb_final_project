@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename field &apos;isLocked&apos; in &apos;Variable&apos; to &apos;lock&apos;&#x0A;- Original project: &apos;adb_final_proj&apos;&#x0A;- Original element: &apos;Variable.isLocked&apos;&#x0A;- Renamed element: &apos;Variable.lock&apos;&#x0A;- Update references to refactored element&#x0A;- Update textual occurrences in comments and strings" delegate="false" deprecate="false" description="Rename field &apos;isLocked&apos;" flags="589826" getter="false" id="org.eclipse.jdt.ui.rename.field" input="/src&lt;{Variable.java[Variable^isLocked" name="lock" references="true" setter="false" stamp="1511746726631" textual="false" version="1.0"/>
+</session>

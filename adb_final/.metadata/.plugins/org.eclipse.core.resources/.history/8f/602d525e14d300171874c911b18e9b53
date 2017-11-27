@@ -53,14 +53,12 @@ public class Variable {
     		return lock;
     }
     public void setLock() {
-    		this.lock = !this.lock;
+    		this.lock = true;
     }
     public int getPreviousTransactionID() {
     		return this.previousTransactionID;
     }
-    public void setPreviousTransactionID(int previousTransactionID) {
-    		this.previousTransactionID = previousTransactionID;
-    }
+    
     public HashSet<Integer> getCorrespondingTransactions() {
 		return this.correspondingTransactions;
     }
