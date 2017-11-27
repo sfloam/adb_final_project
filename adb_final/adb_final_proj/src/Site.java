@@ -1,8 +1,8 @@
 import java.util.HashMap;
 
 public class Site {
-    public int id;
-    public LockTable lt;
+    private int id;
+    private LockTable lt;
 
     public Site(int id) {
         this.id = id;
@@ -24,6 +24,14 @@ public class Site {
 
     public void fail() {
         this.lt = null;
+    }
+    
+    public LockTable getLT() {
+    		return this.lt;
+    }
+    
+    public int getID() {
+    		return this.id;
     }
 
 }

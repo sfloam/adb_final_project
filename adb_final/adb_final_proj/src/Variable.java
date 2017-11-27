@@ -12,8 +12,14 @@ public class Variable {
     public Variable(int id) {
         this.id = id;
         this.value = id * 10;
+        
+        //does a transaction have a this variable
         this.isLocked = false;
+        
+        //which transactions use this variable
         correspondingTransactions = new HashSet<Integer>();
+        
+        //use to read next site for variable when first fails
         siteLocations = new ArrayList<Integer>();
 
         if (id % 2 == 0) {

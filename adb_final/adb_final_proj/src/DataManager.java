@@ -12,8 +12,8 @@ import java.util.HashMap;
  *
  */
 public class DataManager {
-    public HashMap<Integer, Variable> vars;
-    public ArrayList<Site> sites;
+    private HashMap<Integer, Variable> vars;
+    private ArrayList<Site> sites;
 
     public DataManager(){
         this.vars = new HashMap<Integer, Variable>();
@@ -21,13 +21,11 @@ public class DataManager {
 
         for (int x = 1; x < 21; x++) {
             vars.put(x, new Variable(x));
-            System.out.println(vars);
         }
         
         this.sites.add(null); //leaves site0 empty will make it easier later
         for (int x = 1; x < 11; x++) {
             sites.add(new Site(x));
-            System.out.println(sites.get(x).lt);
         }
     }
     
@@ -38,5 +36,21 @@ public class DataManager {
     public ArrayList<Site> getSites() {
     	return this.sites;
     }
-
+    
+    
+    //go into every site (associated with variable's sites) and update the variable
+    //may need to address scenario if the site is failed
+    //should not address lock checking because that should be done before this method is invoked in TM
+    public void replicate(int varID, int value) {
+    		for (Integer siteID : this.vars.get(varID).siteLocations) {
+    			this.sites.get(siteID).getLT().put(varID, value);
+    		}
+    	
+    }
+    
+		//TODO: maybe check if the site is available
+    public Integer read(int siteID, int varID ) {
+    		return this.sites.get(siteID).getLT().get(varID);
+    }
+   
 }

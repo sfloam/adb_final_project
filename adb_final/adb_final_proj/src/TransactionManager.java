@@ -5,8 +5,8 @@ import java.util.HashMap;
 
 public class TransactionManager {
 
-    public LinkedList<Transaction> running;
-    public int age;
+    private LinkedList<Transaction> running;
+    private int age;
     private DataManager dm;
 
 
@@ -25,7 +25,7 @@ public class TransactionManager {
 
             //Traverses lists to see if transaction exists
             for (Transaction t : running) {
-                if (t.transName.equals(transaction.get(1))) {
+                if (t.getTransName().equals(transaction.get(1))) {
                     System.out.println("Transaction Exists! Multiple begins for same transaction!");
                     isNewTransaction = false;
                     break;
@@ -36,7 +36,7 @@ public class TransactionManager {
             if (isNewTransaction) {
                 String transName = transaction.get(1).replaceAll("T", "");
                 Transaction tObj = new Transaction(Integer.parseInt(transName));
-                tObj.age = this.age;
+                tObj.setAge(this.age);
                 this.age++;
                 running.add(tObj);
             }
@@ -49,7 +49,7 @@ public class TransactionManager {
             boolean alreadyFound = false;
 
             for (Transaction t : running) {
-                if ((t.transName).equals(transName)) {
+                if ((t.getTransName()).equals(transName)) {
                     t.operations.add(transaction);
                     //TODO: Execute INstruction Operation
                     executeWriteInstruction(transaction);
@@ -65,7 +65,7 @@ public class TransactionManager {
             boolean alreadyFound = false;
 
             for (Transaction t : running) {
-                if ((t.transName).equals(transName)) {
+                if ((t.getTransName()).equals(transName)) {
                     t.operations.add(transaction);
                     //TODO: Execute INstruction Operation
                     executeReadInstruction(transaction);
@@ -77,7 +77,7 @@ public class TransactionManager {
         //may need to address missing sites and null pointers later on
         else if (transaction.get(0).equalsIgnoreCase("fail")) {
             int siteID = Integer.parseInt(transaction.get(1));
-            dm.sites.get(siteID).fail();
+            dm.getSites().get(siteID).fail();
         }
 
         //not complete
@@ -106,12 +106,12 @@ public class TransactionManager {
 
     public void lockVariable(Integer varInt, Integer transInt) {
 
-        if ((dm.vars.get(varInt).isLocked) && (transInt != dm.vars.get(varInt).previousTransactionID)) {
+        if ((dm.getVars().get(varInt).isLocked) && (transInt != dm.getVars().get(varInt).previousTransactionID)) {
             System.out.println("LOCKED");
         } else {
-            dm.vars.get(varInt).isLocked = true;
-            dm.vars.get(varInt).previousTransactionID = transInt;
-            dm.vars.get(varInt).addTransaction(transInt);
+            dm.getVars().get(varInt).isLocked = true;
+            dm.getVars().get(varInt).previousTransactionID = transInt;
+            dm.getVars().get(varInt).addTransaction(transInt);
             System.out.println("x" + varInt + " is not locked yet");
         }
     }
@@ -122,6 +122,7 @@ public class TransactionManager {
     public void executeReadInstruction(ArrayList<String> operation) {
 
     }
+    
 
 
 }
