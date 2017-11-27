@@ -1,0 +1,199 @@
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+
+/**
+ * <h1>Transaction Manager</h1> The TransactionManager assigns each operation
+ * provided by the user's text file. The TransactionManager reads the parsed
+ * operation and determines if it is a begin, read, write, read only, dump,
+ * fail, etc. Depending on the operation, the TransactionManager executes an
+ * action (see below).
+ * 
+ * <ul>
+ * <li>Properties</li>
+ * <ul>
+ * <li>running: a linked list of Transaction objects to determine which
+ * transactions are currently running</li>
+ * <li>age: a global integer to keep track of the order in which transactions
+ * began (may not be needed)</li>
+ * <li>dm: the DataManager object that was passed by ExecuteTransactions</li>
+ * </ul>
+ * </ul>
+ * 
+ * 
+ */
+public class TransactionManager {
+
+	private LinkedList<Transaction> running;
+	private int age;
+	private DataManager dm;
+
+	public TransactionManager(DataManager dm) {
+		// May not need all of these
+		this.running = new LinkedList<Transaction>();
+		this.age = 0;
+		this.dm = dm;
+	}
+
+	/**
+	 * assignTransaction
+	 * 
+	 * @param ArrayList<String>
+	 *            operation - a tick from the text file (i.e. begin(T1))
+	 * 
+	 *            Types of Operations
+	 *            <ul>
+	 *            <li>begin</li>
+	 *            	<ul>
+	 *            	<li>Parse begin, T1 (or other transaction number).</li>
+	 *            	<li>Check the running LinkedList to see if the transaction already began. If so, produce an error.</li>
+	 *            	<li>If it is a new transaction, create a new Transaction object with it's age.</li>
+	 *           	<li>Update the age age count so the next Transaction will have an higher age (higher == younger).</li>
+	 *           	<li>Add the transaction object to the end of the running LinkedList.</li>
+ 	*            	</ul>
+ 	*            <li>Write</li>
+	 *            </ul>
+	 * 
+	 * 
+	 * 
+	 */
+
+	public void assignTransaction(ArrayList<String> operation) {
+		if (operation.get(0).equalsIgnoreCase("begin")) {
+			boolean isNewTransaction = true;
+
+			//traverses lists to see if transaction exists
+			for (Transaction t : running) {
+				if (t.getTransName().equals(operation.get(1))) {
+					System.out.println("Transaction Exists! Multiple begins for same transaction!");
+					isNewTransaction = false;
+					break;
+				}
+			}
+
+			//checks if this is a new transaction and not an existing one
+			if (isNewTransaction) {
+				String transName = operation.get(1).replaceAll("T", "");
+				Transaction tObj = new Transaction(Integer.parseInt(transName));
+				tObj.setAge(this.age);
+				this.age++;
+				running.add(tObj);
+			}
+		}
+
+		// not complete
+		else if (operation.get(0).equalsIgnoreCase("W")) {
+			String transName = operation.get(1);
+			for (Transaction t : running) {
+				if ((t.getTransName()).equals(transName)) {
+					t.operations.add(operation);
+
+					// we have correspondingVars to determine which to unlock at the end
+					t.addVar(Integer.parseInt(operation.get(2).replaceAll("x", "")));
+					executeWriteInstruction(operation);
+					break;
+				}
+			}
+		}
+
+		// not complete
+		else if (operation.get(0).equalsIgnoreCase("R")) {
+			int index;
+			String transName = operation.get(1);
+			boolean alreadyFound = false;
+
+			for (Transaction t : running) {
+				if ((t.getTransName()).equals(transName)) {
+					t.operations.add(operation);
+					// TODO: Execute INstruction Operation
+					executeReadInstruction(operation);
+					break;
+				}
+			}
+		}
+
+		// may need to address missing sites and null pointers later on
+		else if (operation.get(0).equalsIgnoreCase("fail")) {
+			int siteID = Integer.parseInt(operation.get(1));
+			dm.getSites().get(siteID).fail();
+		}
+
+		// not complete
+		else if (operation.get(0).equalsIgnoreCase("end")) {
+			// parsing transName
+			String transName = operation.get(1).replaceAll("T", "");
+			int transID = Integer.parseInt(transName);
+
+			// temp var
+			HashSet<Integer> transVars = null;
+
+			// go through existing trans to find it and get its vars
+			for (Transaction t : this.running) {
+				if (t.getID() == transID) {
+					transVars = t.getCorrespondingVars();
+					break;
+				}
+			}
+
+			// using transaction's hashset of vars to avoid having to go through all sites
+			if (transVars != null) {
+				Iterator<Integer> varIDs = transVars.iterator();
+
+				// temp dataVar
+				Variable dataVar;
+				while (varIDs.hasNext()) {
+					int varID = varIDs.next();
+					dataVar = dm.getVars().get(varID);
+					Iterator<Integer> siteIDs = dataVar.getSiteLocations().iterator();
+					// if size is zero, then no sites are avail or we are out of bounds meaning no
+					// sites are avail
+					while (siteIDs.hasNext()) {
+						int siteID = siteIDs.next();
+						if (dm.getSites().get(siteID).getLT() != null) {
+							int val = dm.getSites().get(siteID).getLT().get(varID).getValue();
+							dm.getVars().get(varID).setValue(val);
+						}
+					}
+				}
+			}
+
+		}
+
+		// not complete
+		else if (operation.get(0).equalsIgnoreCase("dump")) {
+
+		}
+
+		// not complete
+		else {
+			System.out.println("Something wasn't covered: " + operation);
+		}
+	}
+
+	public void executeWriteInstruction(ArrayList<String> operation) {
+		Integer varInt = Integer.parseInt(operation.get(2).replaceAll("x", ""));
+		Integer transInt = Integer.parseInt(operation.get(1).replaceAll("T", ""));
+		Integer varValue = Integer.parseInt(operation.get(3));
+		if (isWriteInstructionNotAllowed(varInt, transInt)) {
+			// TODO: something when write is not allowed
+		} // variable name, transactionID
+		else {
+			dm.getVars().get(varInt).setLock();
+			dm.getVars().get(varInt).setPreviousTransactionID(transInt);
+			dm.getVars().get(varInt).addTransaction(transInt);
+			dm.replicate(varInt, varValue);
+		}
+		System.out.println(dm);
+	}
+
+	public boolean isWriteInstructionNotAllowed(Integer varInt, Integer transInt) {
+		return ((dm.getVars().get(varInt).isLocked())
+				&& (transInt != dm.getVars().get(varInt).getPreviousTransactionID()));
+	}
+
+	public void executeReadInstruction(ArrayList<String> operation) {
+
+	}
+
+}

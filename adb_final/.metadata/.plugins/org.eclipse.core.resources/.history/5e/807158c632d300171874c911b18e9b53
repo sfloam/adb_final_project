@@ -1,0 +1,89 @@
+
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
+
+
+/**
+ * 
+ * @author scottfloam and pratikkarnik
+ * 
+ *
+ */
+public class Transaction {
+	private int age;
+	private String transName;
+	private int id;
+	private boolean readLock;
+	private boolean writeLock;
+	private HashSet<Integer>correspondingVars;
+
+	// used for rollbacks
+	public Queue<ArrayList<String>> operations;
+
+	public Transaction(int id) {
+		this.age = 0;
+		this.transName = "T" + id;
+		this.id = id;
+		readLock = false;
+		writeLock = false;
+		this.operations = new LinkedList<ArrayList<String>>();
+		this.correspondingVars = new HashSet<Integer>();
+	}
+
+	public int compareTo(Transaction other_transaction) {
+		int res = this.id - other_transaction.id;
+		System.out.println(this + " compared to " + other_transaction);
+		return res;
+	}
+
+	public String read(Integer varName, LockTable table) {
+		if (!readLock) {
+			return "" + table.get(varName);
+		}
+		return "locked";
+	}
+
+	public void write(Integer varName, Integer value, LockTable table) {
+		if (!writeLock) {
+			table.updateVar(varName, value);
+		}
+	}
+
+	public boolean getWriteLock() {
+		return this.writeLock;
+	}
+
+	public boolean getReadLock() {
+		return this.readLock;
+	}
+
+	public int getID() {
+		return this.id;
+	}
+
+	public Integer getAge() {
+		return this.age;
+	}
+
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	public String getTransName() {
+		return this.transName;
+	}
+
+	public String toString() {
+		return "T" + this.id;
+	}
+	
+	public HashSet<Integer> getCorrespondingVars(){
+		return this.correspondingVars;
+	}
+	public void addVar(int varID) {
+		this.correspondingVars.add(varID);
+	}
+
+}

@@ -1,0 +1,27 @@
+
+import java.util.HashMap;
+
+/**
+ * 
+ * @author pratikkarnik and scottfloam
+ *         <h1>Lock Table</h1> The LockTable class is simply a HashMap with
+ *         customized features. It holds the Variable's id and the Variable. 
+ * 
+ */
+public class LockTable extends HashMap<Integer, Variable> {
+	private int id;
+
+	LockTable(int id) {
+		this.id = id;
+	}
+
+	public int getID() {
+		return this.id;
+	}
+
+	// updates values of variable in locktable
+	public void updateVar(int varID, int value) {
+		this.get(varID).setValue(value);
+	}
+
+}

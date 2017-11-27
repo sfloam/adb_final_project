@@ -1,0 +1,48 @@
+/**
+ * 
+ * @author scottfloam and pratikkarnik
+ * <h1>Data Manager</h1> The DataManager class creates 10 sites for data
+ *         replication. It also generates 20 variables replicates those
+ *         variables across individual or multiple sites depending on the
+ *         variable id. Variables with even variable ids are replicated across
+ *         all sites. Variables with odd variable ids are replicated across
+ *         sites with the site id (1 + (varID % 10)). The initialization of
+ *         sites with variables is conducted in the Site class during the Site's
+ *         instantiation.
+ */
+public class Site {
+	private int id;
+	private LockTable lt;
+	
+	public Site(int id) {
+		this.id = id;
+		this.lt = new LockTable(id);
+
+		for (int i = 1; i < 21; i++) {
+			if (i % 2 == 0) {
+				(this.lt).put(i, new Variable(i));
+			} else if ((1 + (i % 10)) == this.id) {
+				(this.lt).put(i, new Variable(i));
+			}
+		}
+
+	}
+
+	public String toString() {
+		return "Site_" + id;
+	}
+
+	
+	public void fail() {
+		this.lt = null;
+	}
+
+	public LockTable getLT() {
+		return this.lt;
+	}
+
+	public int getID() {
+		return this.id;
+	}
+
+}

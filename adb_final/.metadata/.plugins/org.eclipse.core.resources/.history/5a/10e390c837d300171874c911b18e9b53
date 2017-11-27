@@ -1,0 +1,161 @@
+
+import java.util.Queue;
+import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.HashSet;
+
+/**
+ * 
+ * @author scottfloam and pratikkarnik
+ * 
+ *         <h1>Transaction</h1> The Transaction keeps track of the transaction
+ *         details. It holds information such as whether it is locked, how long
+ *         it has been running, if there is a read or write lock on it, the id
+ *         of the transaction, and the variables corresponding to that
+ *         transaction. In addition, it also keeps a log of its operations in
+ *         the operations queue. We need to think about if we want this to be a
+ *         stack instead. It may make more sense to pop out most recent
+ *         transactions to revert actions. TBD.
+ *
+ */
+public class Transaction {
+	private int age;
+	private String transName;
+	private int id;
+	private boolean readLock;
+	private boolean writeLock;
+	private HashSet<Integer> correspondingVars;
+
+	// used for rollbacks
+	public Queue<ArrayList<String>> operations;
+
+	public Transaction(int id) {
+		this.age = 0;
+		this.transName = "T" + id;
+		this.id = id;
+		readLock = false;
+		writeLock = false;
+		this.operations = new LinkedList<ArrayList<String>>();
+		this.correspondingVars = new HashSet<Integer>();
+	}
+
+	/**
+	 * compareTo would be necessary if you needed to sort transactions in some
+	 * manner. May not be necessary. Could be possibily used for age sorting?
+	 * 
+	 * @param other_transaction
+	 * @return
+	 */
+	public int compareTo(Transaction other_transaction) {
+		int res = this.id - other_transaction.id;
+		System.out.println(this + " compared to " + other_transaction);
+		return res;
+	}
+
+	/**
+	 * Not sure if this is necessary since we have read stuff in TransactionManager
+	 * May need to transition stuff here or remove these
+	 * 
+	 * @param varName
+	 * @param table
+	 * @return
+	 */
+	public String read(Integer varName, LockTable table) {
+		if (!readLock) {
+			return "" + table.get(varName);
+		}
+		return "locked";
+	}
+
+	/**
+	 * Not sure if this is necessary since we have write stuff in TransactionManager
+	 * May need to transition stuff here or remove these
+	 * 
+	 * @param varName
+	 * @param value
+	 * @param table
+	 * @return
+	 */
+	public void write(Integer varName, Integer value, LockTable table) {
+		if (!writeLock) {
+			table.updateVar(varName, value);
+		}
+	}
+
+	/**
+	 * may be used to address status when needing to address 2pl constraints
+	 * 
+	 * @return
+	 */
+	public boolean getWriteLock() {
+		return this.writeLock;
+	}
+
+	/**
+	 * may be used to address status when needing to address 2pl constraints
+	 * 
+	 * @return
+	 */
+	public boolean getReadLock() {
+		return this.readLock;
+	}
+
+	/**
+	 * gets id of the transaction
+	 * 
+	 * @return
+	 */
+	public int getID() {
+		return this.id;
+	}
+
+	/**
+	 * gets age of the transaction
+	 * age is simply the initial order in which it was inserted into the running queue
+	 * 
+	 * @return
+	 */
+	public Integer getAge() {
+		return this.age;
+	}
+
+	/**
+	 * setAge(int age) should only be done once when transaction is initiliazed
+	 * @param age
+	 */
+	public void setAge(int age) {
+		this.age = age;
+	}
+
+	/**
+	 * getTransName() Gets the name of a transaction such as T1
+	 * 
+	 * @return
+	 */
+	public String getTransName() {
+		return this.transName;
+	}
+
+	/**
+	 * toString() prints out the Transaction in string form (i.e. T1)
+	 */
+	public String toString() {
+		return "T" + this.id;
+	}
+
+	/**
+	 *getCorrespondingVars keeps a HashSet of all variables used by this transaction used for determining which sites need to be updated at commit time
+	 * We then use these vars to find the sites we need to update
+	 * 
+	 * We could also use this as a means to determine next available free site quickly
+	 * @return
+	 */
+	public HashSet<Integer> getCorrespondingVars() {
+		return this.correspondingVars;
+	}
+
+	public void addVar(int varID) {
+		this.correspondingVars.add(varID);
+	}
+
+}

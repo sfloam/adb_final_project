@@ -1,0 +1,21 @@
+
+import java.util.HashMap;
+
+
+public class LockTable extends HashMap<Integer, Variable> {
+    private int id;
+
+    LockTable(int id) {
+        this.id = id;
+    }
+    
+    public int getID() {
+    		return this.id;
+    }
+    
+    //updates values of variable in locktable
+    public void updateVar(int varID,int value) {
+    		this.get(varID).setValue(value);
+    	}
+
+}

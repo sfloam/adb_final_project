@@ -1,11 +1,9 @@
 import java.util.Scanner;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.File;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.util.Arrays;
-import java.util.List;
 import java.util.ArrayList;
 
 
@@ -60,6 +58,7 @@ public class ExecuteTransactions {
                         tm.assignTransaction(lineArray);
                     }
                 }
+                fileScanner.close();
             } catch (FileNotFoundException e) {
                 System.out.println("File not found!");
             }
