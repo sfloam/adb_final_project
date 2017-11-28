@@ -24,12 +24,14 @@ import java.util.Iterator;
 public class TransactionManager {
 
 	private LinkedList<Transaction> running;
+	private LinkedList<Transaction> aborted;
 	private int age;
 	private DataManager dm;
 
 	public TransactionManager(DataManager dm) {
 		// May not need all of these
 		this.running = new LinkedList<Transaction>();
+		this.aborted = new LinkedList<Transaction>();
 		this.age = 0;
 		this.dm = dm;
 	}
@@ -134,7 +136,7 @@ public class TransactionManager {
 			String transName = operation.get(1);
 
 			for (Transaction t : running) {
-
+				
 				if ((t.getTransName()).equals(transName)) {
 
 					// log transaction operations in transaction may come in handy for recovery
@@ -146,7 +148,7 @@ public class TransactionManager {
 
 					// perform write instructions
 					executeWriteInstruction(operation);
-
+					resolveDeadLock();
 					break;
 				}
 			}
@@ -189,7 +191,7 @@ public class TransactionManager {
 
 			// go through existing trans to find it and get its vars
 			for (Transaction t : this.running) {
-				if (t.getID() == transID) {
+				if (t.getID() == transID && !t.isBlocked()) {
 					transVars = t.getCorrespondingVars();
 					break;
 				}
@@ -218,16 +220,17 @@ public class TransactionManager {
 
 							// unlock locked Variables in each site's LockTable associated with Transaction
 							// that ended
-							dm.getSites().get(siteID).getLT().get(varID).setLock();
+							dm.getSites().get(siteID).getLT().get(varID).setLock(false);
 							dm.getVars().get(varID).setValue(val);
 
 							// unlock locked Variables in DataManager's vars associated with Transaction
 							// that ended
-							dm.getVars().get(varID).setLock();
+							dm.getVars().get(varID).setLock(false);
 						}
 					}
 				}
 			}
+			System.out.println(running);
 		}
 
 		// TODO: NOT COMPLETE
@@ -265,9 +268,15 @@ public class TransactionManager {
 
 		if (isWriteInstructionNotAllowed(varID, transID)) {
 			// TODO: something when write is not allowed
+			for (Transaction t : running) {
+				if (t.getID() == transID) {
+					t.setBlocked(true);
+					break;
+				}
+			}
 
 		} else {
-			dm.getVars().get(varID).setLock();
+			dm.getVars().get(varID).setLock(true);
 			dm.getVars().get(varID).setPreviousTransactionID(transID);
 			dm.getVars().get(varID).addToCorrespondingTransaction(transID);
 			dm.replicate(varID, varValue);
@@ -290,6 +299,75 @@ public class TransactionManager {
 
 	public void executeReadInstruction(ArrayList<String> operation) {
 		// TODO: build this
+	}
+
+	// TODO: Identify what needs to happen during an abortion
+	// TODO: If you need to revert a value back, you should use dm.getvars() because
+	// its last commited and 2pl states nothing could have written to it
+	// TODO: b/c its locked and vars is updated to last commmited
+	public void resolveDeadLock() {
+		boolean isDeadlocked = false;
+		Transaction youngestTransaction = null;
+		Integer youngestTransactionAge = -1;
+
+		for (Transaction t : running) {
+			if (t.getAge() > youngestTransactionAge) {
+				youngestTransactionAge = t.getAge();
+				youngestTransaction = t;
+
+			}
+			if (!t.isBlocked()) {
+				isDeadlocked = false;
+			}
+		}
+		
+		if (isDeadlocked) {
+			abort(youngestTransaction);
+		}
+	}
+
+	public void abort(Transaction youngestTransaction) {
+		aborted.add(youngestTransaction);
+		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
+		while (correspondingVarIDs.hasNext()) {
+			int varID = correspondingVarIDs.next();
+
+			// use varIDs to identify sites where locks may be issued by this transaction
+			Iterator<Integer> sites = dm.getVars().get(varID).getSiteLocations().iterator();
+			while (sites.hasNext()) {
+				int siteID = sites.next();
+
+				// confirm that the variable at a site was infact locked by this transaction
+				if ((dm.getSites().get(siteID).getLT().get(varID).getPreviousTransactionID() == youngestTransaction
+						.getID()) && (dm.getSites().get(siteID).getLT().get(varID).isLocked())) {
+
+					// update value of copies at each site where a var is present to stale value
+					// (before commit)
+					dm.getSites().get(siteID).getLT().get(varID).setValue(dm.getVars().get(varID).getValue());
+
+					// update previous transaction to null for locking purposes
+					dm.getSites().get(siteID).getLT().get(varID).setPreviousTransactionID(null);
+
+					// update locktable locked to unlocked for that variable
+					dm.getSites().get(siteID).getLT().get(varID).setLock(false);
+
+					// remove transaction from site correspondingTransactions may need to keep
+					dm.getSites().get(siteID).getLT().get(varID).getCorrespondingTransactions()
+							.remove(youngestTransaction.getID());
+
+					// update vars locked
+					dm.getVars().get(siteID).setLock(false);
+
+				}
+			}
+		}
+
+		for (int i = 0; i < running.size(); i++) {
+			if (running.get(i).getID() == youngestTransaction.getID()) {
+				running.remove(i);
+			}
+		}
+
 	}
 
 }

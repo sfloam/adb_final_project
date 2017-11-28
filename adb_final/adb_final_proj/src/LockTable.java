@@ -30,6 +30,7 @@ public class LockTable extends HashMap<Integer, Variable> {
 	 */
 	public void updateVar(int varID, int value) {
 		this.get(varID).setValue(value);
+		this.get(varID).setLock(true);
 	}
 
 }

@@ -86,13 +86,6 @@ public class Transaction {
 	}
 
 	/**
-	 * toString() prints out the Transaction in string form (i.e. T1)
-	 */
-	public String toString() {
-		return "T" + this.id;
-	}
-
-	/**
 	 * getCorrespondingVars keeps a HashSet of all Variable IDs used by this Transaction used for 
 	 * determining which Site(s) need to be updated at commit time. We then use these Variable IDs
 	 * to find the Site(s) that have variables that we need to update. We could also use this as a 
@@ -115,8 +108,8 @@ public class Transaction {
 	 * setBlocked simply toggles the blocked boolean on and off (blocked is initialized to false)
 	 * 
 	 */
-	public void setBlocked() {
-		this.blocked = !this.blocked;
+	public void setBlocked(boolean blocked) {
+		this.blocked = blocked;
 	}
 
 	/**
@@ -126,6 +119,23 @@ public class Transaction {
 	 */
 	public boolean isBlocked() {
 		return this.blocked;
+	}
+
+	/**
+	 * toString() prints out the Transaction information
+	 */
+	public String toString() {
+		
+		String output = "transName: "+ transName +"\n"
+							+" Age: " + age +"\n"
+							+" id: " + id +"\n"
+							+" correspondingVars: " + correspondingVars +"\n"
+							+" blocked: " + blocked +"\n"
+							+" operations: "+ operations +"\n";
+							
+				
+		
+		return output;
 	}
 
 }

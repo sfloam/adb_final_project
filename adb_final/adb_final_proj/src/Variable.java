@@ -60,15 +60,15 @@ public class Variable {
 		return lock;
 	}
 
-	public void setLock() {
-		this.lock = !this.lock;
+	public void setLock(boolean lock) {
+		this.lock = lock;
 	}
 
 	public int getPreviousTransactionID() {
 		return this.previousTransactionID;
 	}
 
-	public void setPreviousTransactionID(int previousTransactionID) {
+	public void setPreviousTransactionID(Integer previousTransactionID) {
 		this.previousTransactionID = previousTransactionID;
 	}
 

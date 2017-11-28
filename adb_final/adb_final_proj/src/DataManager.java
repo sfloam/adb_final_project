@@ -105,6 +105,7 @@ public class DataManager {
 	public void replicate(int varID, int value) {
 		for (Integer siteID : this.vars.get(varID).getSiteLocations()) {
 			if (this.sites.get(siteID).getLT() != null) {
+				//updateVar will also handle locks
 				this.sites.get(siteID).getLT().updateVar(varID, value);
 			}
 		}
