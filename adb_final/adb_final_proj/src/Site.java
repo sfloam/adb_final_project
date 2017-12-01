@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 /**
  * 
  * @author scottfloam and pratikkarnik
@@ -11,6 +13,8 @@
  */
 public class Site {
 	private int id;
+	private boolean isSiteUp;
+	private ArrayList<Variable> variablesOnSite;
 	private LockTable lt;
 	
 	public Site(int id) {
@@ -32,8 +36,15 @@ public class Site {
 	 * toString
 	 * @return site's id
 	 */
+	@Override
 	public String toString() {
-		return "Site_" + id;
+		StringBuilder siteInformation = new StringBuilder();
+		siteInformation.append("Site ID: "+this.id);
+		for(int i = 0; i < variablesOnSite.size(); i++) {
+			String variableInformation = variablesOnSite.get(i).getID() + " = " + variablesOnSite.get(i).getValue();
+			siteInformation.append(" - "+variableInformation+"\n");
+		}
+		return siteInformation.toString();
 	}
 
 	/**
@@ -61,4 +72,7 @@ public class Site {
 		return this.id;
 	}
 
+	public ArrayList<Variable> getVariablesOnSite() {
+		return this.variablesOnSite;
+	}
 }

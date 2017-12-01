@@ -1,5 +1,6 @@
 import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -27,6 +28,7 @@ public class TransactionManager {
 	private LinkedList<Transaction> aborted;
 	private int age;
 	private DataManager dm;
+	private HashMap<Integer, Site> allSitesMap;
 
 	public TransactionManager(DataManager dm) {
 		// May not need all of these
@@ -368,6 +370,35 @@ public class TransactionManager {
 			}
 		}
 
+	}
+
+	public void dump() {
+		for(int i = 1; i <= GlobalConstants.sites; i++) {
+			System.out.print(allSitesMap.get(i).toString());
+		}
+		System.out.print("\n");
+	}
+
+	public void dumpI(int siteIndex) {
+		// Do we need null checks?
+		if(allSitesMap.containsKey(siteIndex)) {
+			System.out.print(allSitesMap.get(siteIndex).toString());
+		}
+		//Should we throw exception if site index is invalid?
+		System.out.print("\n");
+	}
+
+	public void dumpX(int variableID) {
+		for(int i = 1; i <= GlobalConstants.sites; i++) {
+			ArrayList<Variable> siteVariables = allSitesMap.get(i).getVariablesOnSite();
+			for(Variable eachSiteVariable : siteVariables) {
+				if(eachSiteVariable.getID() == variableID) {
+					System.out.print("Site ID: "+i+"\n");
+					System.out.print(eachSiteVariable.toString()+"\n");
+				}
+			}
+		}
+		System.out.print("\n");
 	}
 
 }
