@@ -46,6 +46,7 @@ public class TransactionManager {
 				dmList.add(null);
 			} else {
 				dmList.add(new DataManager(i));
+				allSitesMap.put(i,dmList.get(i).getSite());
 			}
 
 		}
@@ -142,10 +143,10 @@ public class TransactionManager {
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			int value = readTransaction(transactionInfo[0], varID);
 			if (value != -1) {
-				// TODO: What does a read physically do. I guess nothing since dump will show it's value?
+				// TODO: What does a read physically do. I guess nothing since dump will show
+				// it's value?
 			} else {
-				// TODO: Maybe check for deadlock?
-				// TODO: if deadlocked --> abort, if not add to waiting?
+				resolveDeadLock();
 			}
 		} else if (operationLine.startsWith("W(")) {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
@@ -191,6 +192,7 @@ public class TransactionManager {
 	 * @return value that was read or -1 if no read can happen
 	 */
 	private int readTransaction(String txnID, int varID) {
+		currentTransactions.get(txnID).addToCorrespondingVars(varID);
 		Variable var = null;
 		if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
 			for (DataManager eachDM : dmList) {
@@ -207,7 +209,7 @@ public class TransactionManager {
 		} else {
 			Operation op = new Operation(time, "R", varID);
 			currentTransactions.get(txnID).operations.add(op);
-			//needed for deadlock
+			// needed for deadlock
 			currentTransactions.get(txnID).setBlocked(true);
 			return -1;
 		}
@@ -345,30 +347,30 @@ public class TransactionManager {
 	 * @param operation (i.e. [W, T4, x4, 35])
 	 */
 	public void executeWriteInstruction(ArrayList<String> operation) {
-		// TODO: do we need read locks and write locks separated
-		Integer varID = Integer.parseInt(operation.get(2).replaceAll("x", ""));
-		Integer transID = Integer.parseInt(operation.get(1).replaceAll("T", ""));
-		Integer varValue = Integer.parseInt(operation.get(3));
-
-		if (isWriteInstructionNotAllowed(varID, transID)) {
-			// TODO: something when write is not allowed
-			for (Transaction t : running) {
-				if (t.getID() == transID) {
-					t.setBlocked(true);
-					break;
-				}
-			}
-
-		} else {
-			// TODO: SET LOCKING
-			for (int i = 1; i < 11; i++) {
-				if (dmList.get(i).getSite().hasVariable(varID)) {
-					dmList.get(i).replicate(varID, varValue);
-				}
-
-			}
-
-		}
+//		// TODO: do we need read locks and write locks separated
+//		Integer varID = Integer.parseInt(operation.get(2).replaceAll("x", ""));
+//		Integer transID = Integer.parseInt(operation.get(1).replaceAll("T", ""));
+//		Integer varValue = Integer.parseInt(operation.get(3));
+//
+//		if (isWriteInstructionNotAllowed(varID, transID)) {
+//			// TODO: something when write is not allowed
+//			for (Transaction t : running) {
+//				if (t.getID() == transID) {
+//					t.setBlocked(true);
+//					break;
+//				}
+//			}
+//
+//		} else {
+//			// TODO: SET LOCKING
+//			for (int i = 1; i < 11; i++) {
+//				if (dmList.get(i).getSite().hasVariable(varID)) {
+//					dmList.get(i).replicate(varID, varValue);
+//				}
+//
+//			}
+//
+//		}
 	}
 
 	/**
@@ -399,13 +401,13 @@ public class TransactionManager {
 		Transaction youngestTransaction = null;
 		Integer youngestTransactionAge = -1;
 
-		for (Transaction t : running) {
-			if (t.getAge() > youngestTransactionAge) {
-				youngestTransactionAge = t.getAge();
-				youngestTransaction = t;
-
+		Iterator<String>currTrans = currentTransactions.keySet().iterator();
+		while(currTrans.hasNext()) {
+			if (currentTransactions.get(currTrans).getAge() > youngestTransactionAge) {
+				youngestTransactionAge = currentTransactions.get(currTrans).getAge();
+				youngestTransaction = currentTransactions.get(currTrans);
 			}
-			if (!t.isBlocked()) {
+			if (!currentTransactions.get(currTrans).isBlocked()) {
 				isDeadlocked = false;
 			}
 		}
@@ -417,47 +419,25 @@ public class TransactionManager {
 
 	// TODO : Fix Abort functionaltiy
 	public void abort(Transaction youngestTransaction) {
+		System.out.println("Aborted Trxn: "+youngestTransaction);
 		aborted.add(youngestTransaction);
+		String txnID = youngestTransaction.getTransName();
 		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
+
+		// get vars associated with youngest transaction
 		while (correspondingVarIDs.hasNext()) {
 			int varID = correspondingVarIDs.next();
 
 			// use varIDs to identify sites where locks may be issued by this transaction
-			Iterator<Integer> sites = dm.getVars().get(varID).getSiteLocations().iterator();
-			while (sites.hasNext()) {
-				int siteID = sites.next();
-
-				// confirm that the variable at a site was infact locked by this transaction
-				if ((dmList.get(siteID).getSite().getLT().get(varID).getPreviousTransactionID() == youngestTransaction
-						.getID()) && (dmList.get(siteID).getSite().getLT().get(varID).isLocked())) {
-
-					// update value of copies at each site where a var is present to stale value
-					// (before commit)
-					dmList.get(siteID).get(siteID).getLT().get(varID).setValue(dm.getVars().get(varID).getValue());
-
-					// update previous transaction to null for locking purposes
-					dmList.get(siteID).getSite().getLT().get(varID).setPreviousTransactionID(null);
-
-					// update locktable locked to unlocked for that variable
-					dmList.get(siteID).getSite().getLT().get(varID).setLock(false);
-
-					// remove transaction from site correspondingTransactions may need to keep
-					dmList.get(siteID).getSite().getLT().get(varID).getCorrespondingTransactions()
-							.remove(youngestTransaction.getID());
-
-					// update vars locked
-					// TODO add locks
-
+			Iterator<DataManager> eachDM = dmList.iterator();
+			while (eachDM.hasNext()) {
+				Site site = eachDM.next().getSite();
+				// confirm that the variable at a site was in fact locked by this transaction
+				if (site.getLT().isLockWithTransactionIDAndVarIDPresent(txnID, varID)) {
+					currentTransactions.remove(txnID);
 				}
 			}
 		}
-
-		for (int i = 0; i < running.size(); i++) {
-			if (running.get(i).getID() == youngestTransaction.getID()) {
-				running.remove(i);
-			}
-		}
-
 	}
 
 	public void dump() {
