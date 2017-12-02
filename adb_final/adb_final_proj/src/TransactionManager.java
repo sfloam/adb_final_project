@@ -37,17 +37,14 @@ public class TransactionManager {
 		this.age = 0;
 		this.dm = dm;
 	}
-
+	
 	/**
-	 * 
 	 * assignTransaction
-	 * 
-	 * @param ArrayList<String>
-	 *            operation - a tick from the text file (i.e. begin(T1))
-	 * 
-	 *            Types of Operations
-	 *            <ul>
-	 *            <li>begin</li>
+	 * @param operations is a tick from the text file (i.e. begin(T1))
+	 * <p>
+	 * <strong>Types of Operations</strong>
+	 * 			<ul>
+	 * 			<li>Begin</li>
 	 *            	<ul>
 	 *            	<li>Parse begin, T1 (or other transaction number).</li>
 	 *            	<li>Check the running LinkedList to see if the transaction already began. If so, produce an error.</li>
@@ -87,7 +84,13 @@ public class TransactionManager {
 	 *              		<li>If we have a site 2 (which we should) then execute the fail command via the DataManager class on that site.</li>
 	 *              		<li>Fail will set the Site's LockTable to null.
 	 *              		</ul>
-	 *              <ul>
+	 *              <li>Dump</li>
+	 *              		<ul>
+	 *              		<li>Parse dump() so that we have [dump].</li>
+	 *                  <li>Parse dump("i")  [dump, siteID].</li>
+	 *                  <li>Parse dump("x.j") so that we have [dump, "x.j"]. Then parse "x.j" so that we have ["varID","siteID"] </li>
+	 *              		<li>To simplify the parsing, we require a "." in between "x" and "j" so that we can distinguish when the user wants to perform dump(i) v.s. dump(xj)</li>
+	 *              		</ul>
 	 *              <li>End</li>
 	 *              		<ul>
 	 *              		<li>Parse end(T2) so that we have [end, T2].</li>
@@ -104,13 +107,9 @@ public class TransactionManager {
 	 *              		</ul>
 	 *              <ul>
 	 *            </ul>
-	 * 
-	 * 
-	 *  
 	 */
-
-	// TODO: need to address abortions
 	public void assignTransaction(ArrayList<String> operation) {
+		// TODO: need to address abortions
 		if (operation.get(0).equalsIgnoreCase("begin")) {
 			boolean isNewTransaction = true;
 
@@ -237,7 +236,29 @@ public class TransactionManager {
 
 		// TODO: NOT COMPLETE
 		else if (operation.get(0).equalsIgnoreCase("dump")) {
-
+			if (operation.size()==1) {
+				dump();
+			}
+			else if (operation.size()==2) {
+				try {
+					if (operation.get(1).contains(".")) {
+						String [] varAndSite = operation.get(1).split(".");
+						int varID = Integer.parseInt(varAndSite[0]);
+						int siteID = Integer.parseInt(varAndSite[1]);
+						dumpX(varID);
+					}
+					else {
+						int siteID = Integer.parseInt(operation.get(1));
+						dumpI(siteID);
+					}
+				}
+				catch (Exception e) {
+					System.out.println("Dump Parser Failed.");
+				}
+			}
+			else {
+				System.out.println("Invalid Dump Format.");
+			}
 		}
 
 		// TODO: NOT COMPLETE
@@ -322,7 +343,7 @@ public class TransactionManager {
 				isDeadlocked = false;
 			}
 		}
-		
+
 		if (isDeadlocked) {
 			abort(youngestTransaction);
 		}
@@ -373,7 +394,8 @@ public class TransactionManager {
 	}
 
 	public void dump() {
-		for(int i = 1; i <= GlobalConstants.sites; i++) {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
+			System.out.println(i);
 			System.out.print(allSitesMap.get(i).toString());
 		}
 		System.out.print("\n");
@@ -381,20 +403,20 @@ public class TransactionManager {
 
 	public void dumpI(int siteIndex) {
 		// Do we need null checks?
-		if(allSitesMap.containsKey(siteIndex)) {
+		if (allSitesMap.containsKey(siteIndex)) {
 			System.out.print(allSitesMap.get(siteIndex).toString());
 		}
-		//Should we throw exception if site index is invalid?
+		// Should we throw exception if site index is invalid?
 		System.out.print("\n");
 	}
 
 	public void dumpX(int variableID) {
-		for(int i = 1; i <= GlobalConstants.sites; i++) {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			ArrayList<Variable> siteVariables = allSitesMap.get(i).getVariablesOnSite();
-			for(Variable eachSiteVariable : siteVariables) {
-				if(eachSiteVariable.getID() == variableID) {
-					System.out.print("Site ID: "+i+"\n");
-					System.out.print(eachSiteVariable.toString()+"\n");
+			for (Variable eachSiteVariable : siteVariables) {
+				if (eachSiteVariable.getID() == variableID) {
+					System.out.print("Site ID: " + i + "\n");
+					System.out.print(eachSiteVariable.toString() + "\n");
 				}
 			}
 		}
