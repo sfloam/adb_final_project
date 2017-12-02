@@ -23,8 +23,6 @@ import java.util.Iterator;
  * 
  */
 public class TransactionManager {
-
-	private LinkedList<Transaction> running;
 	private LinkedList<Transaction> aborted;
 	private ArrayList<DataManager> dmList;
 	private int age;
@@ -35,7 +33,6 @@ public class TransactionManager {
 	public TransactionManager() {
 		// TODO: May not need all of these
 		this.time = 0;
-		this.running = new LinkedList<Transaction>();
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
 		allSitesMap = new HashMap<Integer, Site>();
