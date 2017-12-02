@@ -45,6 +45,10 @@ public class TransactionManager {
 			if (i == 0) {
 				dmList.add(null);
 			}
+			else {
+				dmList.add(new DataManager(i));
+			}
+			
 		}
 	}
 
