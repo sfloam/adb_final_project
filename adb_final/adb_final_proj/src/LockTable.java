@@ -7,32 +7,32 @@ import java.util.ArrayList;
  * 
  */
 public class LockTable {
-	private ArrayList<Lock> lockTable;
+	private ArrayList<LockObj> lockTable;
 
 	public LockTable() {
-		lockTable = new ArrayList<Lock>();
+		lockTable = new ArrayList<LockObj>();
 	}
 
-	public ArrayList<Lock> getLockTable() {
+	public ArrayList<LockObj> getLockTable() {
 		return lockTable;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder lockTableInfo = new StringBuilder();
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			lockTableInfo.append(eachLock + " \n");
 		}
 		return lockTableInfo.toString();
 	}
 
-	public void addLock(String lockType, String txnId, int varID) {
-		Lock newLock = new Lock(varID, txnId, lockType);
+	public void addLock(String lockType, String txnID, int varID) {
+		LockObj newLock = new LockObj(lockType, txnID, varID);
 		lockTable.add(newLock);
 	}
 
 	public boolean isLockWithTransactionIDPresent(String txnId) {
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getTransactionID().equals(txnId)) {
 				return true;
 			}
@@ -41,7 +41,7 @@ public class LockTable {
 	}
 
 	public boolean isLockWithVariableIDPresent(int varID) {
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getVariableID() == varID) {
 				return true;
 			}
@@ -50,7 +50,7 @@ public class LockTable {
 	}
 
 	public boolean isLockPresent(String lockType, String txnId, int varID) {
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getLockType().equals(lockType) &&
 					eachLock.getTransactionID().equals(txnId) && eachLock.getVariableID() == varID) {
 				return true;
@@ -60,7 +60,7 @@ public class LockTable {
 	}
 
 	public void removeLock(String lockType, String txnId, int varID) {
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getLockType().equals(lockType) &&
 					eachLock.getTransactionID().equals(txnId) && eachLock.getVariableID() == varID) {
 				lockTable.remove(eachLock);
@@ -69,16 +69,16 @@ public class LockTable {
 	}
 
 	public void removeLockOnTransactionID(String txnID) {
-		for(Lock eachLock : lockTable) {
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getTransactionID().equals(txnID)) {
 				lockTable.remove(eachLock);
 			}
 		}
 	}
 
-	public ArrayList<Lock> getAllLocksForVariable(int varID) {
-		ArrayList<Lock> variableLocks = new ArrayList<Lock>();
-		for(Lock eachLock : lockTable) {
+	public ArrayList<LockObj> getAllLocksForVariable(int varID) {
+		ArrayList<LockObj> variableLocks = new ArrayList<LockObj>();
+		for(LockObj eachLock : lockTable) {
 			if(eachLock.getVariableID() == varID) {
 				variableLocks.add(eachLock);
 			}
@@ -87,22 +87,18 @@ public class LockTable {
 	}
 
 	public boolean isReadLockPossible(String txnID, int varID) {
-		ArrayList<Lock> allVariableLocks = this.getAllLocksForVariable(varID);
+		ArrayList<LockObj> allVariableLocks = this.getAllLocksForVariable(varID);
 		if(allVariableLocks.size() == 0) {
 			return true;
 		}
 		boolean doesAnotherTransactionHaveWriteLock = false;
-		for(Lock eachLock : allVariableLocks) {
+		for(LockObj eachLock : allVariableLocks) {
 			if(eachLock.getLockType().equals(GlobalConstants.writeLock)
 					&& !eachLock.getTransactionID().equals(txnID)) {
 				doesAnotherTransactionHaveWriteLock = true;
 			}
 		}
-		if(!doesAnotherTransactionHaveWriteLock) {
-			return true;
-		} else {
-			return false;
-		}
+		return !doesAnotherTransactionHaveWriteLock;
 	}
 
 	public void obtainReadLock(String txnID, int varID) {
