@@ -29,12 +29,16 @@ public class TransactionManager {
 	private ArrayList<DataManager> dmList;
 	private int age;
 	private HashMap<Integer, Site> allSitesMap;
+	private HashMap<String,Transaction> currentTransactions;
 
 	public TransactionManager() {
 		// May not need all of these
 		// TODO: Create DMS
 		this.running = new LinkedList<Transaction>();
 		this.aborted = new LinkedList<Transaction>();
+		currentTransactions = new HashMap<String,Transaction>();
+		allSitesMap = new HashMap<Integer, Site>();
+
 		this.age = 0;
 		this.dmList = new ArrayList<DataManager>();
 		for (int i = 0; i < 11; i++) {
@@ -114,7 +118,63 @@ public class TransactionManager {
 	 *              <ul>
 	 *            </ul>
 	 */
-	public void assignTransaction(ArrayList<String> operation) {
+	public void assignTransaction(String operationLine) {
+		if(operationLine.startsWith("dump()")) {
+			dump();
+		} else if(operationLine.startsWith("dump(")) {
+			int siteIndex = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+			dumpI(siteIndex);
+		} else if(operationLine.startsWith("dump(x")) {
+			int variableIndex = Integer.parseInt(operationLine.substring(6, operationLine.length() - 1));
+			dumpX(variableIndex);
+		} else if(operationLine.startsWith("begin(")) {
+			String transactionName = operationLine.substring(6,operationLine.length() - 1);
+			startTransaction(transactionName,GlobalConstants.readWriteBegin);
+		} else if(operationLine.startsWith("beginRO(")) {
+			String transactionName = operationLine.substring(8,operationLine.length() - 1);
+			startTransaction(transactionName,GlobalConstants.readOnlyBegin);
+		} else if(operationLine.startsWith("R(")) {
+			String [] transactionInfo = operationLine.substring(2,operationLine.length() - 1).split(",");
+			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
+			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
+			readTransaction(transactionInfo[0],varID);
+		} else if(operationLine.startsWith("W(")) {
+			String [] transactionInfo = operationLine.substring(2,operationLine.length() - 1).split(",");
+			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
+			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
+			System.out.println(transactionInfo[2]);
+			int valueToBeWritten = Integer.parseInt(transactionInfo[2]);
+			writeTransaction(transactionInfo[0],varID,valueToBeWritten);
+		} else if(operationLine.startsWith("end(")) {
+			String transactionName = operationLine.substring(4,operationLine.length() - 1);
+			endTransaction(transactionName);
+		} else if(operationLine.startsWith("fail(")) {
+			// Invoke Fail of DM
+		} else if(operationLine.startsWith("recover(")) {
+			// Invoke Recover of DM
+		}
+	}
+
+	private void startTransaction(String transactionType, String txnID) {
+		if(!currentTransactions.containsKey(txnID)) {
+			Transaction newTransaction = new Transaction(txnID,transactionType);
+			currentTransactions.put(txnID, newTransaction);
+		}
+	}
+
+	private void endTransaction(String txnID) {
+
+	}
+
+	private void readTransaction(String txnID, int varID) {
+
+	}
+
+	private void writeTransaction(String txnID, int varID, int value) {
+
+	}
+
+	/*public void assignTransaction(ArrayList<String> operation) {
 		// TODO: need to address abortions
 		if (operation.get(0).equalsIgnoreCase("begin")) {
 			boolean isNewTransaction = true;
@@ -267,7 +327,7 @@ public class TransactionManager {
 		else {
 			System.out.println("Something wasn't covered: " + operation);
 		}
-	}
+	}*/
 
 	/**
 	 * executeWriteInstruction
