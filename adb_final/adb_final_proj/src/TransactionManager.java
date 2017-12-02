@@ -208,6 +208,7 @@ public class TransactionManager {
 			return var.getValue();
 		} else {
 			Operation op = new Operation(time, "R", varID);
+			time++;
 			currentTransactions.get(txnID).operations.add(op);
 			// needed for deadlock
 			currentTransactions.get(txnID).setBlocked(true);
