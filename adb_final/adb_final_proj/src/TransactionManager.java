@@ -29,14 +29,14 @@ public class TransactionManager {
 	private ArrayList<DataManager> dmList;
 	private int age;
 	private HashMap<Integer, Site> allSitesMap;
-	private HashMap<String,Transaction> currentTransactions;
+	private HashMap<String, Transaction> currentTransactions;
 
 	public TransactionManager() {
 		// May not need all of these
 		// TODO: Create DMS
 		this.running = new LinkedList<Transaction>();
 		this.aborted = new LinkedList<Transaction>();
-		currentTransactions = new HashMap<String,Transaction>();
+		currentTransactions = new HashMap<String, Transaction>();
 		allSitesMap = new HashMap<Integer, Site>();
 
 		this.age = 0;
@@ -44,11 +44,10 @@ public class TransactionManager {
 		for (int i = 0; i < 11; i++) {
 			if (i == 0) {
 				dmList.add(null);
-			}
-			else {
+			} else {
 				dmList.add(new DataManager(i));
 			}
-			
+
 		}
 	}
 
@@ -123,45 +122,57 @@ public class TransactionManager {
 	 *            </ul>
 	 */
 	public void assignTransaction(String operationLine) {
-		if(operationLine.startsWith("dump()")) {
+		if (operationLine.startsWith("dump()")) {
 			dump();
-		} else if(operationLine.startsWith("dump(")) {
+		} else if (operationLine.startsWith("dump(")) {
 			int siteIndex = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
 			dumpI(siteIndex);
-		} else if(operationLine.startsWith("dump(x")) {
+		} else if (operationLine.startsWith("dump(x")) {
 			int variableIndex = Integer.parseInt(operationLine.substring(6, operationLine.length() - 1));
 			dumpX(variableIndex);
-		} else if(operationLine.startsWith("begin(")) {
-			String transactionName = operationLine.substring(6,operationLine.length() - 1);
-			startTransaction(transactionName,GlobalConstants.readWriteBegin);
-		} else if(operationLine.startsWith("beginRO(")) {
-			String transactionName = operationLine.substring(8,operationLine.length() - 1);
-			startTransaction(transactionName,GlobalConstants.readOnlyBegin);
-		} else if(operationLine.startsWith("R(")) {
-			String [] transactionInfo = operationLine.substring(2,operationLine.length() - 1).split(",");
+		} else if (operationLine.startsWith("begin(")) {
+			String transactionName = operationLine.substring(6, operationLine.length() - 1);
+			startTransaction(transactionName, GlobalConstants.readWriteBegin);
+		} else if (operationLine.startsWith("beginRO(")) {
+			String transactionName = operationLine.substring(8, operationLine.length() - 1);
+			startTransaction(transactionName, GlobalConstants.readOnlyBegin);
+		} else if (operationLine.startsWith("R(")) {
+			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-			readTransaction(transactionInfo[0],varID);
-		} else if(operationLine.startsWith("W(")) {
-			String [] transactionInfo = operationLine.substring(2,operationLine.length() - 1).split(",");
+			// TODO: You need to save the operation
+			int value = readTransaction(transactionInfo[0], varID);
+			if (value != -1) {
+				// TODO: add to dumping string
+				// TODO: What does a read actually do here?
+			} else {
+				// TODO: what is the action that we need to accomplish if the read can't happen
+				// TODO: Maybe check for deadlock?
+				// TODO: if deadlocked --> abort, if not add to waiting?
+			}
+		} else if (operationLine.startsWith("W(")) {
+			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			System.out.println(transactionInfo[2]);
 			int valueToBeWritten = Integer.parseInt(transactionInfo[2]);
-			writeTransaction(transactionInfo[0],varID,valueToBeWritten);
-		} else if(operationLine.startsWith("end(")) {
-			String transactionName = operationLine.substring(4,operationLine.length() - 1);
+			// TODO: You need to save the operation
+			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
+		} else if (operationLine.startsWith("end(")) {
+			String transactionName = operationLine.substring(4, operationLine.length() - 1);
 			endTransaction(transactionName);
-		} else if(operationLine.startsWith("fail(")) {
-			// Invoke Fail of DM
-		} else if(operationLine.startsWith("recover(")) {
-			// Invoke Recover of DM
+		} else if (operationLine.startsWith("fail(")) {
+			int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+			failSite(siteID);
+		} else if (operationLine.startsWith("recover(")) {
+			int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+			recoverSite(siteID);
 		}
 	}
 
 	private void startTransaction(String transactionType, String txnID) {
-		if(!currentTransactions.containsKey(txnID)) {
-			Transaction newTransaction = new Transaction(txnID,transactionType);
+		if (!currentTransactions.containsKey(txnID)) {
+			Transaction newTransaction = new Transaction(txnID, transactionType);
 			currentTransactions.put(txnID, newTransaction);
 		}
 	}
@@ -170,7 +181,24 @@ public class TransactionManager {
 
 	}
 
-	private void readTransaction(String txnID, int varID) {
+	private int readTransaction(String txnID, int varID) {
+		Variable var = null;
+		if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
+			for (DataManager eachDM : dmList) {
+				if (eachDM.getSite().hasVariable(varID) && eachDM.getSite().getLT().isReadLockPossible(txnID, varID)) {
+					// TODO: not, we technically double check if readlock is possible b/c you do so
+					// in obtainReadLock
+					eachDM.getSite().getLT().obtainReadLock(txnID, varID);
+					var = eachDM.getSite().getDataTable().getDT().get(varID);
+				}
+			}
+		}
+
+		if (var != null) {
+			return var.getValue();
+		} else {
+			return -1;
+		}
 
 	}
 
@@ -178,160 +206,116 @@ public class TransactionManager {
 
 	}
 
-	/*public void assignTransaction(ArrayList<String> operation) {
-		// TODO: need to address abortions
-		if (operation.get(0).equalsIgnoreCase("begin")) {
-			boolean isNewTransaction = true;
+	private void failSite(int siteID) {
+		dmList.get(siteID).getSite().fail();
+	}
 
-			// traverses lists to see if transaction exists
-			for (Transaction t : running) {
-				if (t.getTransName().equals(operation.get(1))) {
-					System.out.println("Transaction Exists! Multiple begins for same transaction!");
-					isNewTransaction = false;
-					break;
-				}
-			}
+	private void recoverSite(int siteID) {
+		// TODO: RECOVER SITE
+	}
 
-			// checks if this is a new transaction and not an existing one
-			if (isNewTransaction) {
-				String transName = operation.get(1).replaceAll("T", "");
-				Transaction tObj = new Transaction(Integer.parseInt(transName));
-				tObj.setAge(this.age);
-				this.age++;
-				running.add(tObj);
-			}
-		}
-
-		// TODO: NOT FINISHED LOCKING
-		else if (operation.get(0).equalsIgnoreCase("W")) {
-			String transName = operation.get(1);
-
-			for (Transaction t : running) {
-
-				if ((t.getTransName()).equals(transName)) {
-
-					// log transaction operations in transaction may come in handy for recovery
-					t.operations.add(operation);
-
-					// add the variable id to the transaction's correspondingVars HashSet<Integers>
-					// to determine which variables to unlock at the end (when commits)
-					t.addToCorrespondingVars(Integer.parseInt(operation.get(2).replaceAll("x", "")));
-
-					// perform write instructions
-					executeWriteInstruction(operation);
-					resolveDeadLock();
-					break;
-				}
-			}
-		}
-
-		// TODO: NOT FINISHED LOCKING
-		else if (operation.get(0).equalsIgnoreCase("R")) {
-			String transName = operation.get(1);
-
-			for (Transaction t : running) {
-				if ((t.getTransName()).equals(transName)) {
-					t.operations.add(operation);
-
-					// TODO: Execute Instruction Operation
-					executeReadInstruction(operation);
-					break;
-				}
-			}
-		}
-
-		else if (operation.get(0).equalsIgnoreCase("fail")) {
-			int siteID = Integer.parseInt(operation.get(1));
-			try {
-				dmList.get(siteID).getSite().fail();
-			} catch (Exception e) {
-				System.out.println("Site Does Not Exist! Something went wrong with Failure!");
-			}
-
-		}
-
-		// TODO: NOT COMPLETE
-		else if (operation.get(0).equalsIgnoreCase("end")) {
-
-			// parsing transName
-			String transName = operation.get(1).replaceAll("T", "");
-			int transID = Integer.parseInt(transName);
-
-			// temp var
-			HashSet<Integer> transVars = null;
-
-			// go through existing trans to find it and get its vars
-			for (Transaction t : this.running) {
-				if (t.getID() == transID && !t.isBlocked()) {
-					transVars = t.getCorrespondingVars();
-					break;
-				}
-			}
-
-			// using transaction's HashSet of vars to avoid having to go through all sites
-			if (transVars != null) {
-				Iterator<Integer> varIDs = transVars.iterator();
-
-				// temp dataVar
-				Variable dataVar;
-				while (varIDs.hasNext()) {
-
-					int varID = varIDs.next();
-					dataVar = dm.getVars().get(varID);
-					Iterator<Integer> siteIDs = dataVar.getSiteLocations().iterator();
-
-					// if size is zero, then no sites are avail or we are out of bounds meaning no
-					// sites are avail
-					while (siteIDs.hasNext()) {
-
-						int siteID = siteIDs.next();
-
-						if (dmList.get(siteID).getSite().getLT() != null) {
-							int val = dmList.get(siteID).getSite().getLT().get(varID).getValue();
-
-							// unlock locked Variables in each site's LockTable associated with Transaction
-							// that ended
-							dmList.get(siteID).getSite().getLT().get(varID).setLock(false);
-							dm.getVars().get(varID).setValue(val);
-
-							// unlock locked Variables in DataManager's vars associated with Transaction
-							// that ended
-							dm.getVars().get(varID).setLock(false);
-						}
-					}
-				}
-			}
-			System.out.println(running);
-		}
-
-		// TODO: NOT COMPLETE
-		else if (operation.get(0).equalsIgnoreCase("dump")) {
-			if (operation.size() == 1) {
-				dump();
-			} else if (operation.size() == 2) {
-				try {
-					if (operation.get(1).contains(".")) {
-						String[] varAndSite = operation.get(1).split(".");
-						int varID = Integer.parseInt(varAndSite[0]);
-						int siteID = Integer.parseInt(varAndSite[1]);
-						dumpX(varID);
-					} else {
-						int siteID = Integer.parseInt(operation.get(1));
-						dumpI(siteID);
-					}
-				} catch (Exception e) {
-					System.out.println("Dump Parser Failed.");
-				}
-			} else {
-				System.out.println("Invalid Dump Format.");
-			}
-		}
-
-		// TODO: NOT COMPLETE
-		else {
-			System.out.println("Something wasn't covered: " + operation);
-		}
-	}*/
+	/*
+	 * public void assignTransaction(ArrayList<String> operation) { // TODO: need to
+	 * address abortions if (operation.get(0).equalsIgnoreCase("begin")) { boolean
+	 * isNewTransaction = true;
+	 * 
+	 * // traverses lists to see if transaction exists for (Transaction t : running)
+	 * { if (t.getTransName().equals(operation.get(1))) { System.out.
+	 * println("Transaction Exists! Multiple begins for same transaction!");
+	 * isNewTransaction = false; break; } }
+	 * 
+	 * // checks if this is a new transaction and not an existing one if
+	 * (isNewTransaction) { String transName = operation.get(1).replaceAll("T", "");
+	 * Transaction tObj = new Transaction(Integer.parseInt(transName));
+	 * tObj.setAge(this.age); this.age++; running.add(tObj); } }
+	 * 
+	 * // TODO: NOT FINISHED LOCKING else if
+	 * (operation.get(0).equalsIgnoreCase("W")) { String transName =
+	 * operation.get(1);
+	 * 
+	 * for (Transaction t : running) {
+	 * 
+	 * if ((t.getTransName()).equals(transName)) {
+	 * 
+	 * // log transaction operations in transaction may come in handy for recovery
+	 * t.operations.add(operation);
+	 * 
+	 * // add the variable id to the transaction's correspondingVars
+	 * HashSet<Integers> // to determine which variables to unlock at the end (when
+	 * commits)
+	 * t.addToCorrespondingVars(Integer.parseInt(operation.get(2).replaceAll("x",
+	 * "")));
+	 * 
+	 * // perform write instructions executeWriteInstruction(operation);
+	 * resolveDeadLock(); break; } } }
+	 * 
+	 * // TODO: NOT FINISHED LOCKING else if
+	 * (operation.get(0).equalsIgnoreCase("R")) { String transName =
+	 * operation.get(1);
+	 * 
+	 * for (Transaction t : running) { if ((t.getTransName()).equals(transName)) {
+	 * t.operations.add(operation);
+	 * 
+	 * // TODO: Execute Instruction Operation executeReadInstruction(operation);
+	 * break; } } }
+	 * 
+	 * else if (operation.get(0).equalsIgnoreCase("fail")) { int siteID =
+	 * Integer.parseInt(operation.get(1)); try {
+	 * dmList.get(siteID).getSite().fail(); } catch (Exception e) {
+	 * System.out.println("Site Does Not Exist! Something went wrong with Failure!"
+	 * ); }
+	 * 
+	 * }
+	 * 
+	 * // TODO: NOT COMPLETE else if (operation.get(0).equalsIgnoreCase("end")) {
+	 * 
+	 * // parsing transName String transName = operation.get(1).replaceAll("T", "");
+	 * int transID = Integer.parseInt(transName);
+	 * 
+	 * // temp var HashSet<Integer> transVars = null;
+	 * 
+	 * // go through existing trans to find it and get its vars for (Transaction t :
+	 * this.running) { if (t.getID() == transID && !t.isBlocked()) { transVars =
+	 * t.getCorrespondingVars(); break; } }
+	 * 
+	 * // using transaction's HashSet of vars to avoid having to go through all
+	 * sites if (transVars != null) { Iterator<Integer> varIDs =
+	 * transVars.iterator();
+	 * 
+	 * // temp dataVar Variable dataVar; while (varIDs.hasNext()) {
+	 * 
+	 * int varID = varIDs.next(); dataVar = dm.getVars().get(varID);
+	 * Iterator<Integer> siteIDs = dataVar.getSiteLocations().iterator();
+	 * 
+	 * // if size is zero, then no sites are avail or we are out of bounds meaning
+	 * no // sites are avail while (siteIDs.hasNext()) {
+	 * 
+	 * int siteID = siteIDs.next();
+	 * 
+	 * if (dmList.get(siteID).getSite().getLT() != null) { int val =
+	 * dmList.get(siteID).getSite().getLT().get(varID).getValue();
+	 * 
+	 * // unlock locked Variables in each site's LockTable associated with
+	 * Transaction // that ended
+	 * dmList.get(siteID).getSite().getLT().get(varID).setLock(false);
+	 * dm.getVars().get(varID).setValue(val);
+	 * 
+	 * // unlock locked Variables in DataManager's vars associated with Transaction
+	 * // that ended dm.getVars().get(varID).setLock(false); } } } }
+	 * System.out.println(running); }
+	 * 
+	 * // TODO: NOT COMPLETE else if (operation.get(0).equalsIgnoreCase("dump")) {
+	 * if (operation.size() == 1) { dump(); } else if (operation.size() == 2) { try
+	 * { if (operation.get(1).contains(".")) { String[] varAndSite =
+	 * operation.get(1).split("."); int varID = Integer.parseInt(varAndSite[0]); int
+	 * siteID = Integer.parseInt(varAndSite[1]); dumpX(varID); } else { int siteID =
+	 * Integer.parseInt(operation.get(1)); dumpI(siteID); } } catch (Exception e) {
+	 * System.out.println("Dump Parser Failed."); } } else {
+	 * System.out.println("Invalid Dump Format."); } }
+	 * 
+	 * // TODO: NOT COMPLETE else { System.out.println("Something wasn't covered: "
+	 * + operation); } }
+	 */
 
 	/**
 	 * executeWriteInstruction
@@ -370,7 +354,7 @@ public class TransactionManager {
 				if (dmList.get(i).getSite().hasVariable(varID)) {
 					dmList.get(i).replicate(varID, varValue);
 				}
-				
+
 			}
 
 		}
@@ -386,7 +370,8 @@ public class TransactionManager {
 	 * @return Returns weather the Variable is locked by another transaction or not
 	 */
 	public boolean isWriteInstructionNotAllowed(Integer varInt, Integer transInt) {
-		// TODO: check if the the current variable is locked and if the current tranaction doesn't hold the lock 
+		// TODO: check if the the current variable is locked and if the current
+		// tranaction doesn't hold the lock
 		return true;
 	}
 
@@ -418,8 +403,8 @@ public class TransactionManager {
 			abort(youngestTransaction);
 		}
 	}
-	
-	//TODO : Fix Abort functionaltiy
+
+	// TODO : Fix Abort functionaltiy
 	public void abort(Transaction youngestTransaction) {
 		aborted.add(youngestTransaction);
 		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();

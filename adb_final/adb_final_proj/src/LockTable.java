@@ -86,6 +86,8 @@ public class LockTable {
 		return variableLocks;
 	}
 
+	//TODO: Need to check for failures at sites (failures are when locktable/data table are null)
+	//TODO: Note a failure does not meen that the txn is aborted necessarily
 	public boolean isReadLockPossible(String txnID, int varID) {
 		ArrayList<LockObj> allVariableLocks = this.getAllLocksForVariable(varID);
 		if(allVariableLocks.size() == 0) {
@@ -101,6 +103,8 @@ public class LockTable {
 		return !doesAnotherTransactionHaveWriteLock;
 	}
 
+	//TODO: Need to check for failures at single table sites (failures are when locktable/data table are null)
+	//TODO: Note a failure does not meen that the txn is aborted necessarily
 	public void obtainReadLock(String txnID, int varID) {
 		if(isReadLockPossible(txnID, varID)) {
 			addLock(GlobalConstants.readLock, txnID, varID);
