@@ -26,12 +26,12 @@ public class Transaction {
 	private String transactionType;
 
 	// used for rollbacks
-	public Queue<ArrayList<String>> operations;
+	public Queue<Operation> operations;
 
 	public Transaction(String id, String txnType) {
 		this.age = 0;
 		this.txnID = id;
-		this.operations = new LinkedList<ArrayList<String>>();
+		this.operations = new LinkedList<Operation>();
 		this.correspondingVars = new HashSet<Integer>();
 		this.blocked = false;
 		this.transactionType = txnType;

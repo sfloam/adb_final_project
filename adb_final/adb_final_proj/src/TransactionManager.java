@@ -30,15 +30,15 @@ public class TransactionManager {
 	private int age;
 	private HashMap<Integer, Site> allSitesMap;
 	private HashMap<String, Transaction> currentTransactions;
+	private int time;
 
 	public TransactionManager() {
-		// May not need all of these
-		// TODO: Create DMS
+		// TODO: May not need all of these
+		this.time = 0;
 		this.running = new LinkedList<Transaction>();
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
 		allSitesMap = new HashMap<Integer, Site>();
-
 		this.age = 0;
 		this.dmList = new ArrayList<DataManager>();
 		for (int i = 0; i < 11; i++) {
@@ -140,13 +140,10 @@ public class TransactionManager {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-			// TODO: You need to save the operation
 			int value = readTransaction(transactionInfo[0], varID);
 			if (value != -1) {
-				// TODO: add to dumping string
-				// TODO: What does a read actually do here?
+				// TODO: What does a read physically do. I guess nothing since dump will show it's value?
 			} else {
-				// TODO: what is the action that we need to accomplish if the read can't happen
 				// TODO: Maybe check for deadlock?
 				// TODO: if deadlocked --> abort, if not add to waiting?
 			}
@@ -181,13 +178,24 @@ public class TransactionManager {
 
 	}
 
+	/**
+	 * readTransaction checks if the currentTransaction started and if it is blocked. If the transaction started and is not blocked then
+	 * it goes through each site's lock table and checks if a read-lock is possible. If so, it obtains the read-lock and obtains one of 
+	 * the variable's values. It doens't matter var will be overwritten by copies in other tables because each site has the same value.
+	 * When we are finished reading, we record the operation in the Transaction's operation list (a queue) only if the read was unsuccessful.
+	 * This may be because the transaction was blocked. We can then use that list to help us remember where we left off when the transaction
+	 * continues.
+	 * 
+	 * @param txnID
+	 * @param varID
+	 * @return value that was read or -1 if no read can happen
+	 */
 	private int readTransaction(String txnID, int varID) {
 		Variable var = null;
 		if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
 			for (DataManager eachDM : dmList) {
 				if (eachDM.getSite().hasVariable(varID) && eachDM.getSite().getLT().isReadLockPossible(txnID, varID)) {
-					// TODO: not, we technically double check if readlock is possible b/c you do so
-					// in obtainReadLock
+					// TODO: we are double checking if readlock is possible in obtainReadLock
 					eachDM.getSite().getLT().obtainReadLock(txnID, varID);
 					var = eachDM.getSite().getDataTable().getDT().get(varID);
 				}
@@ -197,9 +205,12 @@ public class TransactionManager {
 		if (var != null) {
 			return var.getValue();
 		} else {
+			Operation op = new Operation(time, "R", varID);
+			currentTransactions.get(txnID).operations.add(op);
+			//needed for deadlock
+			currentTransactions.get(txnID).setBlocked(true);
 			return -1;
 		}
-
 	}
 
 	private void writeTransaction(String txnID, int varID, int value) {
