@@ -13,7 +13,6 @@ import java.util.ArrayList;
  */
 public class Site {
 	private int id;
-	private boolean isSiteUp;
 	private ArrayList<Variable> variablesOnSite;
 	private LockTable lt;
 	
@@ -70,6 +69,13 @@ public class Site {
 	 */
 	public int getID() {
 		return this.id;
+	}
+	/**
+	 * hasVariable
+	 * @return true if a variable is present, false if not. 
+	 */
+	public boolean hasVariable(int varID) {
+		return this.lt.containsKey(varID);
 	}
 
 	public ArrayList<Variable> getVariablesOnSite() {
