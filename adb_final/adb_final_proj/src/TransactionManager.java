@@ -26,18 +26,24 @@ public class TransactionManager {
 
 	private LinkedList<Transaction> running;
 	private LinkedList<Transaction> aborted;
+	private ArrayList<DataManager> dmList;
 	private int age;
-	private DataManager dm;
 	private HashMap<Integer, Site> allSitesMap;
 
-	public TransactionManager(DataManager dm) {
+	public TransactionManager() {
 		// May not need all of these
+		// TODO: Create DMS
 		this.running = new LinkedList<Transaction>();
 		this.aborted = new LinkedList<Transaction>();
 		this.age = 0;
-		this.dm = dm;
+		this.dmList = new ArrayList<DataManager>();
+		for (int i = 0; i < 11; i++) {
+			if (i == 0) {
+				dmList.add(null);
+			}
+		}
 	}
-	
+
 	/**
 	 * assignTransaction
 	 * @param operations is a tick from the text file (i.e. begin(T1))
@@ -137,7 +143,7 @@ public class TransactionManager {
 			String transName = operation.get(1);
 
 			for (Transaction t : running) {
-				
+
 				if ((t.getTransName()).equals(transName)) {
 
 					// log transaction operations in transaction may come in handy for recovery
@@ -173,7 +179,7 @@ public class TransactionManager {
 		else if (operation.get(0).equalsIgnoreCase("fail")) {
 			int siteID = Integer.parseInt(operation.get(1));
 			try {
-				dm.getSites().get(siteID).fail();
+				dmList.get(siteID).getSite().fail();
 			} catch (Exception e) {
 				System.out.println("Site Does Not Exist! Something went wrong with Failure!");
 			}
@@ -216,12 +222,12 @@ public class TransactionManager {
 
 						int siteID = siteIDs.next();
 
-						if (dm.getSites().get(siteID).getLT() != null) {
-							int val = dm.getSites().get(siteID).getLT().get(varID).getValue();
+						if (dmList.get(siteID).getSite().getLT() != null) {
+							int val = dmList.get(siteID).getSite().getLT().get(varID).getValue();
 
 							// unlock locked Variables in each site's LockTable associated with Transaction
 							// that ended
-							dm.getSites().get(siteID).getLT().get(varID).setLock(false);
+							dmList.get(siteID).getSite().getLT().get(varID).setLock(false);
 							dm.getVars().get(varID).setValue(val);
 
 							// unlock locked Variables in DataManager's vars associated with Transaction
@@ -236,27 +242,23 @@ public class TransactionManager {
 
 		// TODO: NOT COMPLETE
 		else if (operation.get(0).equalsIgnoreCase("dump")) {
-			if (operation.size()==1) {
+			if (operation.size() == 1) {
 				dump();
-			}
-			else if (operation.size()==2) {
+			} else if (operation.size() == 2) {
 				try {
 					if (operation.get(1).contains(".")) {
-						String [] varAndSite = operation.get(1).split(".");
+						String[] varAndSite = operation.get(1).split(".");
 						int varID = Integer.parseInt(varAndSite[0]);
 						int siteID = Integer.parseInt(varAndSite[1]);
 						dumpX(varID);
-					}
-					else {
+					} else {
 						int siteID = Integer.parseInt(operation.get(1));
 						dumpI(siteID);
 					}
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					System.out.println("Dump Parser Failed.");
 				}
-			}
-			else {
+			} else {
 				System.out.println("Invalid Dump Format.");
 			}
 		}
@@ -299,10 +301,14 @@ public class TransactionManager {
 			}
 
 		} else {
-			dm.getVars().get(varID).setLock(true);
-			dm.getVars().get(varID).setPreviousTransactionID(transID);
-			dm.getVars().get(varID).addToCorrespondingTransaction(transID);
-			dm.replicate(varID, varValue);
+			// TODO: SET LOCKING
+			for (int i = 1; i < 11; i++) {
+				if (dmList.get(i).getSite().hasVariable(varID)) {
+					dmList.get(i).replicate(varID, varValue);
+				}
+				
+			}
+
 		}
 	}
 
@@ -316,8 +322,8 @@ public class TransactionManager {
 	 * @return Returns weather the Variable is locked by another transaction or not
 	 */
 	public boolean isWriteInstructionNotAllowed(Integer varInt, Integer transInt) {
-		return ((dm.getVars().get(varInt).isLocked())
-				&& (transInt != dm.getVars().get(varInt).getPreviousTransactionID()));
+		// TODO: check if the the current variable is locked and if the current tranaction doesn't hold the lock 
+		return true;
 	}
 
 	public void executeReadInstruction(ArrayList<String> operation) {
@@ -348,7 +354,8 @@ public class TransactionManager {
 			abort(youngestTransaction);
 		}
 	}
-
+	
+	//TODO : Fix Abort functionaltiy
 	public void abort(Transaction youngestTransaction) {
 		aborted.add(youngestTransaction);
 		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
@@ -361,25 +368,25 @@ public class TransactionManager {
 				int siteID = sites.next();
 
 				// confirm that the variable at a site was infact locked by this transaction
-				if ((dm.getSites().get(siteID).getLT().get(varID).getPreviousTransactionID() == youngestTransaction
-						.getID()) && (dm.getSites().get(siteID).getLT().get(varID).isLocked())) {
+				if ((dmList.get(siteID).getSite().getLT().get(varID).getPreviousTransactionID() == youngestTransaction
+						.getID()) && (dmList.get(siteID).getSite().getLT().get(varID).isLocked())) {
 
 					// update value of copies at each site where a var is present to stale value
 					// (before commit)
-					dm.getSites().get(siteID).getLT().get(varID).setValue(dm.getVars().get(varID).getValue());
+					dmList.get(siteID).get(siteID).getLT().get(varID).setValue(dm.getVars().get(varID).getValue());
 
 					// update previous transaction to null for locking purposes
-					dm.getSites().get(siteID).getLT().get(varID).setPreviousTransactionID(null);
+					dmList.get(siteID).getSite().getLT().get(varID).setPreviousTransactionID(null);
 
 					// update locktable locked to unlocked for that variable
-					dm.getSites().get(siteID).getLT().get(varID).setLock(false);
+					dmList.get(siteID).getSite().getLT().get(varID).setLock(false);
 
 					// remove transaction from site correspondingTransactions may need to keep
-					dm.getSites().get(siteID).getLT().get(varID).getCorrespondingTransactions()
+					dmList.get(siteID).getSite().getLT().get(varID).getCorrespondingTransactions()
 							.remove(youngestTransaction.getID());
 
 					// update vars locked
-					dm.getVars().get(siteID).setLock(false);
+					// TODO add locks
 
 				}
 			}
