@@ -20,20 +20,21 @@ import java.util.HashSet;
 public class Transaction {
 	private int age;
 	private String transName;
-	private int id;
+	private String txnID;
 	private HashSet<Integer> correspondingVars;
 	private boolean blocked;
+	private String transactionType;
 
 	// used for rollbacks
 	public Queue<ArrayList<String>> operations;
 
-	public Transaction(int id) {
+	public Transaction(String id, String txnType) {
 		this.age = 0;
-		this.transName = "T" + id;
-		this.id = id;
+		this.txnID = id;
 		this.operations = new LinkedList<ArrayList<String>>();
 		this.correspondingVars = new HashSet<Integer>();
 		this.blocked = false;
+		this.transactionType = txnType;
 	}
 
 	/**
@@ -43,19 +44,19 @@ public class Transaction {
 	 * @param other_transaction
 	 * @return
 	 */
-	public int compareTo(Transaction other_transaction) {
+	/*public int compareTo(Transaction other_transaction) {
 		int res = this.id - other_transaction.id;
 		System.out.println(this + " compared to " + other_transaction);
 		return res;
-	}
+	}*/
 
 	/**
 	 * gets id of the transaction
 	 * 
 	 * @return
 	 */
-	public int getID() {
-		return this.id;
+	public String getID() {
+		return this.txnID;
 	}
 
 	/**
@@ -128,7 +129,7 @@ public class Transaction {
 		
 		String output = "transName: "+ transName +"\n"
 							+" Age: " + age +"\n"
-							+" id: " + id +"\n"
+							+" id: " + txnID +"\n"
 							+" correspondingVars: " + correspondingVars +"\n"
 							+" blocked: " + blocked +"\n"
 							+" operations: "+ operations +"\n";

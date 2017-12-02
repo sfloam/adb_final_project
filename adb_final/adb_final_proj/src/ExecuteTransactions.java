@@ -28,9 +28,7 @@ public class ExecuteTransactions {
             file_name = args[0];
 
             try {
-                File file = new File(file_name);
-                Scanner fileScanner = new Scanner(file);
-                
+                Scanner fileScanner = new Scanner(new File(file_name));
                 TransactionManager tm = new TransactionManager();
 
                 while (fileScanner.hasNextLine()) {
@@ -48,13 +46,7 @@ public class ExecuteTransactions {
                             }
                         }
                     } else {
-
-                        //Reads transactions and parses them so that they are assignable
-                        line = line.replaceAll("[(),]", " ");
-                        ArrayList<String> lineArray = new ArrayList<String>(Arrays.asList(line.split(" ")));
-
-                        //Gets transactions and sends them to the transaction manager for assignments
-                        tm.assignTransaction(lineArray);
+                    	tm.assignTransaction(line.trim());
                     }
                 }
                 fileScanner.close();
