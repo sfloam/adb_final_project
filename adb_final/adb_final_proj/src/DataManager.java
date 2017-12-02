@@ -53,10 +53,10 @@ public class DataManager {
 	 * @param varID - Variable's ID
 	 * @param value - Variable's value
 	 */
-	public void replicate(int varID, int value) {
+	public void replicate(Integer varID, Integer value) {
 		if (this.site.getLT() != null) {
 			// updateVar will also handle locks
-			this.site.getLT().updateVar(varID, value);
+			this.site.getDataTable().updateVar(varID, value);
 		}
 	}
 
@@ -72,7 +72,7 @@ public class DataManager {
 
 	public Integer read(int siteID, int varID) {
 		if (this.site.getLT() != null) {
-			return this.site.getLT().get(varID).getValue();
+			return this.site.getDataTable().getDT().get(varID).getValue();
 		}
 
 		// if it is not available in the Site's LockTable, return -1
