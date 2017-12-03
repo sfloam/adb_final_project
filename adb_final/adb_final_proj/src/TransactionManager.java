@@ -247,6 +247,8 @@ public class TransactionManager {
 								obtainWriteLocksOnAllVariablesOnActiveSites(txnID, varID);
 								presentTransaction.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
 								initiateActualWriteOnSites(txnID, varID, value);
+								Operation newOperation = new Operation(value, varID, GlobalConstants.writeOperation, age);
+								presentTransaction.addOperation(newOperation);
 							} else if(locksOnVariable.size() == 1) {
 								if(locksOnVariable.get(0).getTransactionID().equals(txnID)
 										&& locksOnVariable.get(0).getLockType().equals(GlobalConstants.readLock)) {
@@ -257,6 +259,10 @@ public class TransactionManager {
 									obtainWriteLocksOnAllVariablesOnActiveSites(txnID, varID);
 									presentTransaction.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
 									initiateActualWriteOnSites(txnID, varID, value);
+									Operation newOperation = new Operation(value, varID, GlobalConstants.writeOperation, age);
+									presentTransaction.addOperation(newOperation);
+								} else {
+									//Waiting logic
 								}
 							} else {
 								//process and wait

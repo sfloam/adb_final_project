@@ -176,4 +176,8 @@ public class Transaction {
 		}
 	}
 
+	public void addOperation(Operation opObj) {
+
+	}
+
 }
