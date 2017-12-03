@@ -231,6 +231,10 @@ public class TransactionManager {
 		}
 	}
 
+	private void makeTransactionWaitForTransactionWithLock(String txnID, int varID) {
+
+	}
+
 	private void writeTransaction(String txnID, int varID, int value) {
 		if(currentTransactions.containsKey(txnID)) {
 			Transaction presentTransaction =  currentTransactions.get(txnID);
