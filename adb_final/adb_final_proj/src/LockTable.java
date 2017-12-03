@@ -20,7 +20,7 @@ public class LockTable {
 	@Override
 	public String toString() {
 		StringBuilder lockTableInfo = new StringBuilder();
-		for(LockObj eachLock : lockTable) {
+		for (LockObj eachLock : lockTable) {
 			lockTableInfo.append(eachLock + " \n");
 		}
 		return lockTableInfo.toString();
@@ -32,8 +32,17 @@ public class LockTable {
 	}
 
 	public boolean isLockWithTransactionIDPresent(String txnId) {
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getTransactionID().equals(txnId)) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getTransactionID().equals(txnId)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean isLockWithTransactionIDAndVarIDPresent(String txnId, int varID) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getTransactionID().equals(txnId) && eachLock.getVariableID() == (varID)) {
 				return true;
 			}
 		}
@@ -41,8 +50,8 @@ public class LockTable {
 	}
 
 	public boolean isLockWithVariableIDPresent(int varID) {
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getVariableID() == varID) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getVariableID() == varID) {
 				return true;
 			}
 		}
@@ -50,9 +59,9 @@ public class LockTable {
 	}
 
 	public boolean isLockPresent(String lockType, String txnId, int varID) {
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getLockType().equals(lockType) &&
-					eachLock.getTransactionID().equals(txnId) && eachLock.getVariableID() == varID) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getLockType().equals(lockType) && eachLock.getTransactionID().equals(txnId)
+					&& eachLock.getVariableID() == varID) {
 				return true;
 			}
 		}
@@ -60,17 +69,17 @@ public class LockTable {
 	}
 
 	public void removeLock(String lockType, String txnId, int varID) {
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getLockType().equals(lockType) &&
-					eachLock.getTransactionID().equals(txnId) && eachLock.getVariableID() == varID) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getLockType().equals(lockType) && eachLock.getTransactionID().equals(txnId)
+					&& eachLock.getVariableID() == varID) {
 				lockTable.remove(eachLock);
 			}
 		}
 	}
 
 	public void removeLockOnTransactionID(String txnID) {
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getTransactionID().equals(txnID)) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getTransactionID().equals(txnID)) {
 				lockTable.remove(eachLock);
 			}
 		}
@@ -78,22 +87,25 @@ public class LockTable {
 
 	public ArrayList<LockObj> getAllLocksForVariable(int varID) {
 		ArrayList<LockObj> variableLocks = new ArrayList<LockObj>();
-		for(LockObj eachLock : lockTable) {
-			if(eachLock.getVariableID() == varID) {
+		for (LockObj eachLock : lockTable) {
+			if (eachLock.getVariableID() == varID) {
 				variableLocks.add(eachLock);
 			}
 		}
 		return variableLocks;
 	}
 
+	// TODO: Need to check for failures at sites (failures are when locktable/data
+	// table are null)
+	// TODO: Note a failure does not meen that the txn is aborted necessarily
 	public boolean isReadLockPossible(String txnID, int varID) {
 		ArrayList<LockObj> allVariableLocks = this.getAllLocksForVariable(varID);
-		if(allVariableLocks.size() == 0) {
+		if (allVariableLocks.size() == 0) {
 			return true;
 		}
 		boolean doesAnotherTransactionHaveWriteLock = false;
-		for(LockObj eachLock : allVariableLocks) {
-			if(eachLock.getLockType().equals(GlobalConstants.writeLock)
+		for (LockObj eachLock : allVariableLocks) {
+			if (eachLock.getLockType().equals(GlobalConstants.writeLock)
 					&& !eachLock.getTransactionID().equals(txnID)) {
 				doesAnotherTransactionHaveWriteLock = true;
 			}
@@ -101,8 +113,11 @@ public class LockTable {
 		return !doesAnotherTransactionHaveWriteLock;
 	}
 
+	// TODO: Need to check for failures at single table sites (failures are when
+	// locktable/data table are null)
+	// TODO: Note a failure does not meen that the txn is aborted necessarily
 	public void obtainReadLock(String txnID, int varID) {
-		if(isReadLockPossible(txnID, varID)) {
+		if (isReadLockPossible(txnID, varID)) {
 			addLock(GlobalConstants.readLock, txnID, varID);
 		}
 	}
