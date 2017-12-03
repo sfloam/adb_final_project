@@ -61,7 +61,7 @@ public class Site {
 	 */
 	public void fail() {
 		this.isUp = false;
-		ArrayList<LockObj> allLockTableObj = new ArrayList<LockObj>();
+		ArrayList<LockObj> allLockTableObj = lt.getLockTable();
 		for(LockObj eachLock : allLockTableObj) {
 			// set intermediate value back to actual value
 			int lockedVariableID = eachLock.getVariableID();
