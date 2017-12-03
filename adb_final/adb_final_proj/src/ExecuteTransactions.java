@@ -1,10 +1,8 @@
-import java.util.Scanner;
-import java.io.FileNotFoundException;
 import java.io.File;
-import java.util.regex.Pattern;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 import java.util.regex.Matcher;
-import java.util.Arrays;
-import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 
 public class ExecuteTransactions {
