@@ -252,7 +252,7 @@ public class TransactionManager {
 							transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
 							presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
 						} else {
-							establishCorrectWaitingOrder(txnID, lockTxnID);
+							establishCorrectWaitingOrderOrAbort(txnID, lockTxnID);
 						}
 					}
 				}
@@ -260,8 +260,17 @@ public class TransactionManager {
 		}
 	}
 	
-	private void establishCorrectWaitingOrder(String txnID1, String txnID2) {
-		
+	private void establishCorrectWaitingOrderOrAbort(String txnID1, String txnID2) {
+		if(txnID1.equals(txnID2)) {
+			return;
+		} else {
+			Transaction txn1 = this.currentTransactions.get(txnID1);
+			Transaction txn2 = this.currentTransactions.get(txnID2);
+			if(txn2.getTransactionWaitingForCurrentTransaction() == null) {
+				txn2.setTransactionWaitingForCurrentTransaction(txnID1);
+				txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(txnID2);
+			}
+		}
 	}
 
 	private void writeTransaction(String txnID, int varID, int value) {
