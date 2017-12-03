@@ -4,6 +4,7 @@ import java.util.ArrayList;
 public class Variable {
 	private int id;
 	private int value;
+	private int intermediateValue;
 	
 	//whether it is locked by a transaction
 	private boolean lock;
@@ -82,6 +83,14 @@ public class Variable {
 
 	public ArrayList<Integer> getSiteLocations() {
 		return this.siteLocations;
+	}
+
+	public int getIntermediateValue() {
+		return intermediateValue;
+	}
+
+	public void setIntermediateValue(int intermediateValue) {
+		this.intermediateValue = intermediateValue;
 	}
 
 }

@@ -24,6 +24,7 @@ public class Transaction {
 	private HashSet<Integer> correspondingVars;
 	private boolean blocked;
 	private String transactionType;
+	private ArrayList<LockObj> locksHeldByTransaction;
 
 	// used for rollbacks
 	public Queue<ArrayList<String>> operations;
@@ -35,6 +36,7 @@ public class Transaction {
 		this.correspondingVars = new HashSet<Integer>();
 		this.blocked = false;
 		this.transactionType = txnType;
+		this.locksHeldByTransaction = new ArrayList<LockObj>();
 	}
 
 	/**
@@ -84,6 +86,10 @@ public class Transaction {
 	 */
 	public String getTransName() {
 		return this.transName;
+	}
+
+	public String getTransactionType() {
+		return transactionType;
 	}
 
 	/**
@@ -137,6 +143,37 @@ public class Transaction {
 				
 		
 		return output;
+	}
+
+	public boolean isWriteLockPresentOnVariable(int varID) {
+		for(LockObj eachLock : locksHeldByTransaction) {
+			if(eachLock.getLockType().equals(GlobalConstants.writeLock)
+					&& eachLock.getVariableID() == varID) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public ArrayList<LockObj> getLocksHeldByTransaction() {
+		return locksHeldByTransaction;
+	}
+
+	public void setLocksHeldByTransaction(ArrayList<LockObj> locksHeldByTransaction) {
+		this.locksHeldByTransaction = locksHeldByTransaction;
+	}
+
+	public void addLockToLocksHeldByTransaction(int varID, String lockType) {
+		LockObj newLock = new LockObj(lockType, this.txnID, varID);
+		locksHeldByTransaction.add(newLock);
+	}
+
+	public void removeLockFromLocksHeldByTransaction(int varID) {
+		for(LockObj eachLock : locksHeldByTransaction) {
+			if(eachLock.getVariableID() == varID) {
+				locksHeldByTransaction.remove(eachLock);
+			}
+		}
 	}
 
 }

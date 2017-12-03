@@ -17,6 +17,7 @@ public class Site {
 	private ArrayList<Variable> variablesOnSite;
 	private LockTable lt;
 	private DataTable dataTable;
+	private boolean isUp;
 
 	public Site(int id) {
 		this.id = id;
@@ -95,4 +96,18 @@ public class Site {
 	public ArrayList<Variable> getVariablesOnSite() {
 		return this.variablesOnSite;
 	}
+
+	public boolean isUp() {
+		return isUp;
+	}
+
+	public void setUp(boolean isUp) {
+		this.isUp = isUp;
+	}
+
+	public void initiateWriteToVariables(int varID, int value) {
+		Variable currentVariable = dataTable.getDT().get(varID);
+		currentVariable.setIntermediateValue(value);
+	}
+
 }
