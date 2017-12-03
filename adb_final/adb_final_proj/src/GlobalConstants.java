@@ -7,5 +7,7 @@ public class GlobalConstants {
 	public final static String writeLock = "WL";
 	public final static String readWriteBegin = "RW";
 	public final static String readOnlyBegin = "RO";
+	public final static String writeOperation = "W";
+	public final static String readOperation = "R";
 	
 }
