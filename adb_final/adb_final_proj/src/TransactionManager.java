@@ -30,12 +30,14 @@ public class TransactionManager {
 	private HashMap<Integer, Site> allSitesMap;
 	private HashMap<String, Transaction> currentTransactions;
 	private int time;
+	private HashMap<String,ArrayList<Operation>> transactionWaitList;
 
 	public TransactionManager() {
 		// TODO: May not need all of these
 		this.time = 0;
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
+		transactionWaitList = new HashMap<String,ArrayList<Operation>>();
 		allSitesMap = new HashMap<Integer, Site>();
 		this.age = 0;
 		this.dmList = new ArrayList<DataManager>();
@@ -261,7 +263,31 @@ public class TransactionManager {
 	}
 
 	private void insertToWaitList(String txnID, Operation newOp) {
+		ArrayList<Operation> transactionOps;
+		if(transactionWaitList.containsKey(txnID)) {
+			transactionOps = transactionWaitList.get(txnID);
+			transactionOps.add(newOp);
+		} else {
+			transactionOps = new ArrayList<Operation>();
+			transactionOps.add(newOp);
+			transactionWaitList.put(txnID, transactionOps);
+		}
+	}
 
+	private void executeOrInformWaitingTransaction(String txnID) {
+		Transaction presentTransaction = this.currentTransactions.get(txnID);
+		if(presentTransaction.getTransactionWaitingForCurrentTransaction() != null) {
+			Transaction waitingTransaction = this.currentTransactions.get(presentTransaction.getTransactionWaitingForCurrentTransaction());
+			String waitingTxnID = waitingTransaction.getID();
+			if(transactionWaitList.size() > 0
+					&& transactionWaitList.containsKey(waitingTxnID)) {
+				waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().remove(txnID);
+				ArrayList<Operation> waitingTxnOpList = transactionWaitList.get(waitingTxnID);
+				Operation firstWaitingOperation = waitingTxnOpList.get(0);
+				int firstWaitingOperationVariable = firstWaitingOperation.getVariableID();
+				// get read or write
+			}
+		}
 	}
 
 	private void obtainAllPossibleWriteLocksOnVariable(int varID, String txnID) {
