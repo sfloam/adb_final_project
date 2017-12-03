@@ -22,16 +22,7 @@ public class Site {
 	public Site(int id) {
 		this.id = id;
 		this.lt = new LockTable();
-		this.dataTable = new DataTable();
-
-		// even sites get all Variables, odd sites use algorithm to assign variables
-		for (int i = 1; i < 21; i++) {
-			if (i % 2 == 0) {
-				(this.dataTable.getDT()).put(i, new Variable(i));
-			} else if ((1 + (i % 10)) == this.id) {
-				(this.dataTable.getDT()).put(i, new Variable(i));
-			}
-		}
+		this.dataTable = new DataTable(id);
 
 	}
 
@@ -42,9 +33,9 @@ public class Site {
 	@Override
 	public String toString() {
 		StringBuilder siteInformation = new StringBuilder();
-		siteInformation.append("Site ID: " + this.id);
+		siteInformation.append("Site ID: " + this.id + "\n");
 		
-		for (int i = 0; i < this.dataTable.getDT().size(); i++) {
+		for (int i = 0; i <= this.dataTable.getDT().size(); i++) {
 			String variableInformation = "";
 			if (this.dataTable.getDT().containsKey(i)) {
 				variableInformation = this.dataTable.getDT().get(i).getID() + " = " + this.dataTable.getDT().get(i).getValue();
