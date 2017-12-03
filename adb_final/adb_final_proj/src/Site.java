@@ -14,7 +14,6 @@ import java.util.HashMap;
  */
 public class Site {
 	private int id;
-//	private ArrayList<Variable> variablesOnSite;
 	private LockTable lt;
 	private DataTable dataTable;
 	private boolean isUp;
