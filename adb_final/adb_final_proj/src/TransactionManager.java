@@ -150,7 +150,7 @@ public class TransactionManager {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-			System.out.println(transactionInfo[2]);
+			//System.out.println(transactionInfo[2]);
 			int valueToBeWritten = Integer.parseInt(transactionInfo[2]);
 			// TODO: You need to save the operation
 			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
@@ -457,7 +457,7 @@ public class TransactionManager {
 
 	public void dump() {
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
-			System.out.println(i);
+			//System.out.println(i);
 			System.out.print(allSitesMap.get(i).toString());
 		}
 		System.out.print("\n");

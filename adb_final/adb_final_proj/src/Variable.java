@@ -5,17 +5,17 @@ public class Variable {
 	private int id;
 	private int value;
 	private int intermediateValue;
-	
-	//whether it is locked by a transaction
+
+	// whether it is locked by a transaction
 	private boolean lock;
-	
-	//last transaction to interact with it
+
+	// last transaction to interact with it
 	private int previousTransactionID;
-	
-	//All transactions that have interacted with it
+
+	// All transactions that have interacted with it
 	private HashSet<Integer> correspondingTransactions;
-	
-	//site locations where transaction can be found
+
+	// site locations where transaction can be found
 	private ArrayList<Integer> siteLocations;
 
 	public Variable(int id) {
@@ -31,7 +31,7 @@ public class Variable {
 		// use to read next site for variable when first fails
 		siteLocations = new ArrayList<Integer>();
 
-		if (id % 2 == 0) {
+		if ((id % 2) == 0) {
 			for (int i = 1; i < 11; i++) {
 				siteLocations.add(i);
 			}

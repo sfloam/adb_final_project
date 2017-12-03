@@ -7,7 +7,7 @@ public class DataTable {
 		this.dt = new HashMap<Integer, Variable>();
 		// even sites get all Variables, odd sites use algorithm to assign variables
 		for (int i = 1; i < 21; i++) {
-			if ((id % 2) == 0) {
+			if ((i % 2) == 0) {
 				(this.dt).put(i, new Variable(i));
 			} 
 			else {
