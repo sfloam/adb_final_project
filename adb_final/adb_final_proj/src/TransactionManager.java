@@ -252,23 +252,27 @@ public class TransactionManager {
 							transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
 							presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
 						} else {
-							establishCorrectWaitingOrderOrAbort(txnID, lockTxnID);
+							//check for deadlock
 						}
 					}
 				}
 			}
 		}
 	}
-	
-	private void establishCorrectWaitingOrderOrAbort(String txnID1, String txnID2) {
-		if(txnID1.equals(txnID2)) {
-			return;
-		} else {
-			Transaction txn1 = this.currentTransactions.get(txnID1);
-			Transaction txn2 = this.currentTransactions.get(txnID2);
-			if(txn2.getTransactionWaitingForCurrentTransaction() == null) {
-				txn2.setTransactionWaitingForCurrentTransaction(txnID1);
-				txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(txnID2);
+
+	private void insertToWaitList(String txnID, Operation newOp) {
+
+	}
+
+	private void obtainAllPossibleWriteLocksOnVariable(int varID, String txnID) {
+		Transaction presentTxn = this.currentTransactions.get(txnID);
+		for(int i = 1; i <= GlobalConstants.sites; i++) {
+			Site currentSite = allSitesMap.get(i);
+			if(currentSite.isUp() && currentSite.hasVariable(varID)) {
+				if(!currentSite.getLT().isLockWithVariableIDPresent(varID)) {
+					currentSite.getLT().addLock(GlobalConstants.writeLock, txnID, varID);
+					presentTxn.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
+				}
 			}
 		}
 	}
@@ -281,15 +285,14 @@ public class TransactionManager {
 					ArrayList<Site> sitesHavingVariable = getUpSitesHavingVariable(varID);
 					if (sitesHavingVariable.size() > 0) {
 						if (checkIfOlderTransactionHasLockOnVariable(presentTransaction.getAge(), varID)) {
-							// abort txn or wait?
-							// notify if any txn wsa waiting on this one
+							// check for deadlock and wait
 						} else {
 							ArrayList<LockObj> locksOnVariable = getAllLocksFromAllSitesForVariable(varID);
 							if (locksOnVariable.size() == 0) {
 								obtainWriteLocksOnAllVariablesOnActiveSites(txnID, varID);
 								presentTransaction.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
 								initiateActualWriteOnSites(txnID, varID, value);
-								Operation newOperation = new Operation(age, GlobalConstants.writeOperation, varID,
+								Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
 										value);
 								presentTransaction.addOperation(newOperation);
 							} else if (locksOnVariable.size() == 1) {
@@ -303,21 +306,43 @@ public class TransactionManager {
 									presentTransaction.addLockToLocksHeldByTransaction(varID,
 											GlobalConstants.writeLock);
 									initiateActualWriteOnSites(txnID, varID, value);
-									Operation newOperation = new Operation(age, GlobalConstants.writeOperation, varID,
+									Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
 											value);
 									presentTransaction.addOperation(newOperation);
 								} else {
-									// Waiting logic
+									makeTransactionWaitForTransactionWithLock(txnID, varID);
+									Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
+											value);
+									insertToWaitList(txnID, newOperation);
+									obtainAllPossibleWriteLocksOnVariable(varID, txnID);
 								}
 							} else {
-								// process and wait
+								makeTransactionWaitForTransactionWithLock(txnID, varID);
+								Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
+										value);
+								insertToWaitList(txnID, newOperation);
+								obtainAllPossibleWriteLocksOnVariable(varID, txnID);
 							}
 						}
 					} else {
-						// all sites are down -- wait
+						makeTransactionWaitForTransactionWithLock(txnID, varID);
+						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
+								value);
+						insertToWaitList(txnID, newOperation);
+						obtainAllPossibleWriteLocksOnVariable(varID, txnID);
 					}
 				} else {
-					// check if it has all write locks if not then wait
+					int numberOfLocksOnVariableByTransaction = presentTransaction.getAllLocksForVariable(varID, GlobalConstants.writeLock).size();
+					int numberOfSitesWithVariable = getAllLocksFromAllSitesForVariable(varID).size();
+					if(numberOfLocksOnVariableByTransaction == numberOfSitesWithVariable) {
+						initiateActualWriteOnSites(txnID, varID, value);
+						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
+								value);
+						presentTransaction.addOperation(newOperation);
+					} else {
+						obtainAllPossibleWriteLocksOnVariable(varID, txnID);
+						makeTransactionWaitForTransactionWithLock(txnID, varID);
+					}
 				}
 			}
 		}

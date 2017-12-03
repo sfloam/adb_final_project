@@ -200,6 +200,14 @@ public class Transaction {
 		this.transactionsWhichCurrentTransactionWaitsFor = transactionsWhichCurrentTransactionWaitsFor;
 	}
 	
-	
+	public ArrayList<LockObj> getAllLocksForVariable(int varID, String lockType) {
+		ArrayList<LockObj> allLocksForVariable = new ArrayList<LockObj>();
+		for(LockObj eachLock : locksHeldByTransaction) {
+			if(eachLock.getLockType().equals(lockType) && eachLock.getVariableID() == varID) {
+				allLocksForVariable.add(eachLock);
+			}
+		}
+		return allLocksForVariable;
+	}
 
 }
