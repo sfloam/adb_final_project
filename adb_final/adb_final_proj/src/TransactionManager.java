@@ -196,7 +196,7 @@ public class TransactionManager {
 		
 	}
 
-	private ArrayList<Site> getUpSitesHavingVariable(int varID) {
+	private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
 		ArrayList<Site> sitesHavingVariable = new ArrayList<Site>();
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			Site currentSite = allSitesMap.get(i);
@@ -340,7 +340,7 @@ public class TransactionManager {
 			if (presentTransaction.getTransactionType().equals(GlobalConstants.readWriteBegin)) {
 				if (!presentTransaction.isWriteLockPresentOnVariable(varID)) {
 					// If transaction has no write locks
-					ArrayList<Site> sitesHavingVariable = getUpSitesHavingVariable(varID);
+					ArrayList<Site> sitesHavingVariable = getActiveSitesHavingVariable(varID);
 					if (sitesHavingVariable.size() > 0) {
 						// There are sites which are active and have the variable
 						if (checkIfOlderTransactionHasLockOnVariable(presentTransaction.getAge(), varID)) {

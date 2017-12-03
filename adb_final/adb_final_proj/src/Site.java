@@ -44,14 +44,32 @@ public class Site {
 		return siteInformation.toString();
 	}
 
+	private Variable getVariableWithID(int varID) {
+		ArrayList<Variable> varList = this.getVariablesOnSite();
+		for(Variable eachVariable : varList) {
+			if(eachVariable.getID() == varID) {
+				return eachVariable;
+			}
+		}
+		return null;
+	}
+
 	/**
 	 * fail
 	 * Sets LockTable (lt) to null
 	 * @return null
 	 */
 	public void fail() {
-		this.lt = null;
-		this.dataTable.clearDT();
+		this.isUp = false;
+		ArrayList<LockObj> allLockTableObj = new ArrayList<LockObj>();
+		for(LockObj eachLock : allLockTableObj) {
+			// set intermediate value back to actual value
+			int lockedVariableID = eachLock.getVariableID();
+			Variable lockedVariable = getVariableWithID(lockedVariableID);
+			int lockedVariableValue = lockedVariable.getValue();
+			lockedVariable.setIntermediateValue(lockedVariableValue);
+		}
+		lt.getLockTable().clear();
 	}
 
 	/**
