@@ -20,7 +20,6 @@ import java.util.HashSet;
  */
 public class Transaction {
 	private int age;
-	private String transName;
 	private String txnID;
 	private HashSet<Integer> correspondingVars;
 	private boolean blocked;
@@ -33,7 +32,6 @@ public class Transaction {
 	public Queue<Operation> operations;
 
 	public Transaction(String id, String txnType) {
-		this.age = 0;
 		this.txnID = id;
 		this.operations = new LinkedList<Operation>();
 		this.correspondingVars = new HashSet<Integer>();
@@ -83,15 +81,7 @@ public class Transaction {
 		this.age = age;
 	}
 
-	/**
-	 * getTransName() Gets the name of a transaction such as T1
-	 * 
-	 * @return
-	 */
-	public String getTransName() {
-		return this.transName;
-	}
-
+	
 	public String getTransactionType() {
 		return transactionType;
 	}
@@ -137,9 +127,8 @@ public class Transaction {
 	 */
 	public String toString() {
 		
-		String output = "transName: "+ transName +"\n"
+		String output = "transName: "+ this.txnID +"\n"
 							+" Age: " + age +"\n"
-							+" id: " + txnID +"\n"
 							+" correspondingVars: " + correspondingVars +"\n"
 							+" blocked: " + blocked +"\n"
 							+" operations: "+ operations +"\n";

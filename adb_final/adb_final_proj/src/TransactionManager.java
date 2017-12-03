@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.util.Queue;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -134,6 +135,7 @@ public class TransactionManager {
 		} else if (operationLine.startsWith("begin(")) {
 			String transactionName = operationLine.substring(6, operationLine.length() - 1);
 			startTransaction(transactionName, GlobalConstants.readWriteBegin);
+			age++;
 		} else if (operationLine.startsWith("beginRO(")) {
 			String transactionName = operationLine.substring(8, operationLine.length() - 1);
 			startTransaction(transactionName, GlobalConstants.readOnlyBegin);
@@ -152,7 +154,7 @@ public class TransactionManager {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-			//System.out.println(transactionInfo[2]);
+			// System.out.println(transactionInfo[2]);
 			int valueToBeWritten = Integer.parseInt(transactionInfo[2]);
 			// TODO: You need to save the operation
 			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
@@ -168,15 +170,30 @@ public class TransactionManager {
 		}
 	}
 
-	private void startTransaction(String transactionType, String txnID) {
+	private void startTransaction(String txnID, String transactionType) {
 		if (!currentTransactions.containsKey(txnID)) {
 			Transaction newTransaction = new Transaction(txnID, transactionType);
+			newTransaction.setAge(age);
 			currentTransactions.put(txnID, newTransaction);
 		}
 	}
 
-	private void endTransaction(String txnID) {
+	// TODO find out what is going on with writes and why not copying
+	// Todo locking
+	// Todo readling checks
 
+	private void endTransaction(String txnID) {
+		Iterator<Integer> eachVar = currentTransactions.get(txnID).getCorrespondingVars().iterator();
+		while (eachVar.hasNext()) {
+			for (DataManager eachDM : dmList) {
+				if (eachDM==null) {
+					continue;
+				} else if (eachDM.getSite().getDataTable().getDT().containsKey(eachVar))
+					eachDM.getSite().getDataTable().getDT().get(eachVar)
+							.setValue(eachDM.getSite().getDataTable().getDT().get(eachVar).getIntermediateValue());
+			}
+		}
+		
 	}
 
 	private ArrayList<Site> getUpSitesHavingVariable(int varID) {
@@ -242,19 +259,21 @@ public class TransactionManager {
 
 	private void makeTransactionWaitForTransactionWithLock(String txnID, int varID) {
 		Transaction presentTransaction = this.currentTransactions.get(txnID);
-		for(int i = 1; i <= GlobalConstants.sites; i++) {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			Site currentSite = allSitesMap.get(i);
-			if(currentSite.isUp()) {
-				if(currentSite.getLT().isLockWithVariableIDPresent(varID)) {
+			if (currentSite.isUp()) {
+				if (currentSite.getLT().isLockWithVariableIDPresent(varID)) {
 					ArrayList<LockObj> allLocksAtSite = currentSite.getLT().getAllLocksForVariable(varID);
-					for(LockObj eachLock : allLocksAtSite) {
+					for (LockObj eachLock : allLocksAtSite) {
 						String lockTxnID = eachLock.getTransactionID();
 						Transaction transactionUnderConsideration = this.currentTransactions.get(lockTxnID);
-						if(transactionUnderConsideration.getTransactionWaitingForCurrentTransaction() == null) {
+						if (transactionUnderConsideration.getTransactionWaitingForCurrentTransaction() == null) {
 							transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
+							transactionUnderConsideration.setBlocked(true);
 							presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
 						} else {
-							//check for deadlock
+							// check for deadlock
+							resolveDeadLock();
 						}
 					}
 				}
@@ -303,10 +322,10 @@ public class TransactionManager {
 
 	private void obtainAllPossibleWriteLocksOnVariable(int varID, String txnID) {
 		Transaction presentTxn = this.currentTransactions.get(txnID);
-		for(int i = 1; i <= GlobalConstants.sites; i++) {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			Site currentSite = allSitesMap.get(i);
-			if(currentSite.isUp() && currentSite.hasVariable(varID)) {
-				if(!currentSite.getLT().isLockWithVariableIDPresent(varID)) {
+			if (currentSite.isUp() && currentSite.hasVariable(varID)) {
+				if (!currentSite.getLT().isLockWithVariableIDPresent(varID)) {
 					currentSite.getLT().addLock(GlobalConstants.writeLock, txnID, varID);
 					presentTxn.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
 				}
@@ -315,6 +334,7 @@ public class TransactionManager {
 	}
 
 	private void writeTransaction(String txnID, int varID, int value) {
+		currentTransactions.get(txnID).addToCorrespondingVars(varID);
 		if (currentTransactions.containsKey(txnID)) {
 			Transaction presentTransaction = currentTransactions.get(txnID);
 			if (presentTransaction.getTransactionType().equals(GlobalConstants.readWriteBegin)) {
@@ -322,7 +342,7 @@ public class TransactionManager {
 					// If transaction has no write locks
 					ArrayList<Site> sitesHavingVariable = getUpSitesHavingVariable(varID);
 					if (sitesHavingVariable.size() > 0) {
-						//There are sites which are active and have the variable
+						// There are sites which are active and have the variable
 						if (checkIfOlderTransactionHasLockOnVariable(presentTransaction.getAge(), varID)) {
 							// older transaction holding lock, so should
 							// check for deadlock and wait
@@ -330,7 +350,7 @@ public class TransactionManager {
 							// If no older transaction holding lock
 							ArrayList<LockObj> locksOnVariable = getAllLocksFromAllSitesForVariable(varID);
 							if (locksOnVariable.size() == 0) {
-								//No locks on variable so we can do write lock
+								// No locks on variable so we can do write lock
 								obtainWriteLocksOnAllVariablesOnActiveSites(txnID, varID);
 								presentTransaction.addLockToLocksHeldByTransaction(varID, GlobalConstants.writeLock);
 								initiateActualWriteOnSites(txnID, varID, value);
@@ -338,10 +358,10 @@ public class TransactionManager {
 										value);
 								presentTransaction.addOperation(newOperation);
 							} else if (locksOnVariable.size() == 1) {
-								//One lock on variable
+								// One lock on variable
 								if (locksOnVariable.get(0).getTransactionID().equals(txnID)
 										&& locksOnVariable.get(0).getLockType().equals(GlobalConstants.readLock)) {
-									//Lock is by current transaction so delete old lock and get new one
+									// Lock is by current transaction so delete old lock and get new one
 									for (int i = 1; i <= GlobalConstants.sites; i++) {
 										allSitesMap.get(i).getLT().removeLock(GlobalConstants.readLock, txnID, varID);
 									}
@@ -354,7 +374,7 @@ public class TransactionManager {
 											value);
 									presentTransaction.addOperation(newOperation);
 								} else {
-									//different transaction has write lock so wait
+									// different transaction has write lock so wait
 									makeTransactionWaitForTransactionWithLock(txnID, varID);
 									Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
 											value);
@@ -362,7 +382,7 @@ public class TransactionManager {
 									obtainAllPossibleWriteLocksOnVariable(varID, txnID);
 								}
 							} else {
-								//many locks on different sites held by different transaction so wait
+								// many locks on different sites held by different transaction so wait
 								makeTransactionWaitForTransactionWithLock(txnID, varID);
 								Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
 										value);
@@ -371,22 +391,21 @@ public class TransactionManager {
 							}
 						}
 					} else {
-						//all sites having variable are not active so wait
+						// all sites having variable are not active so wait
 						makeTransactionWaitForTransactionWithLock(txnID, varID);
-						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
-								value);
+						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID, value);
 						insertToWaitList(txnID, newOperation);
 						obtainAllPossibleWriteLocksOnVariable(varID, txnID);
 					}
 				} else {
 					// If transaction has atleast one write lock
-					int numberOfLocksOnVariableByTransaction = presentTransaction.getAllLocksForVariable(varID, GlobalConstants.writeLock).size();
+					int numberOfLocksOnVariableByTransaction = presentTransaction
+							.getAllLocksForVariable(varID, GlobalConstants.writeLock).size();
 					int numberOfSitesWithVariable = getAllLocksFromAllSitesForVariable(varID).size();
-					if(numberOfLocksOnVariableByTransaction == numberOfSitesWithVariable) {
+					if (numberOfLocksOnVariableByTransaction == numberOfSitesWithVariable) {
 						// Transaction has all the write lock it needs
 						initiateActualWriteOnSites(txnID, varID, value);
-						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID,
-								value);
+						Operation newOperation = new Operation(time, GlobalConstants.writeOperation, varID, value);
 						presentTransaction.addOperation(newOperation);
 					} else {
 						// Transaction does not have all the write lock it needs
@@ -409,7 +428,7 @@ public class TransactionManager {
 	 * @param txnID
 	 * @param varID
 	 * @return value that was read or -1 if no read can happen
-	 */
+	) */
 	private int readTransaction(String txnID, int varID) {
 		currentTransactions.get(txnID).addToCorrespondingVars(varID);
 		Variable var = null;
@@ -503,6 +522,7 @@ public class TransactionManager {
 		}
 
 		if (isDeadlocked) {
+			System.out.println("DEADLOCK!");
 			abort(youngestTransaction);
 		}
 	}
@@ -511,7 +531,7 @@ public class TransactionManager {
 	public void abort(Transaction youngestTransaction) {
 		System.out.println("Aborted Trxn: " + youngestTransaction);
 		aborted.add(youngestTransaction);
-		String txnID = youngestTransaction.getTransName();
+		String txnID = youngestTransaction.getID();
 		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
 
 		// get vars associated with youngest transaction
@@ -532,7 +552,7 @@ public class TransactionManager {
 
 	public void dump() {
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
-			//System.out.println(i);
+			// System.out.println(i);
 			System.out.print(allSitesMap.get(i).toString());
 		}
 		System.out.print("\n");
