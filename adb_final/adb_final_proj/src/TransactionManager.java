@@ -1,4 +1,5 @@
 import java.util.LinkedList;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -238,7 +239,29 @@ public class TransactionManager {
 	}
 
 	private void makeTransactionWaitForTransactionWithLock(String txnID, int varID) {
-
+		Transaction presentTransaction = this.currentTransactions.get(txnID);
+		for(int i = 1; i <= GlobalConstants.sites; i++) {
+			Site currentSite = allSitesMap.get(i);
+			if(currentSite.isUp()) {
+				if(currentSite.getLT().isLockWithVariableIDPresent(varID)) {
+					ArrayList<LockObj> allLocksAtSite = currentSite.getLT().getAllLocksForVariable(varID);
+					for(LockObj eachLock : allLocksAtSite) {
+						String lockTxnID = eachLock.getTransactionID();
+						Transaction transactionUnderConsideration = this.currentTransactions.get(lockTxnID);
+						if(transactionUnderConsideration.getTransactionWaitingForCurrentTransaction() == null) {
+							transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
+							presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
+						} else {
+							establishCorrectWaitingOrder(txnID, lockTxnID);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	private void establishCorrectWaitingOrder(String txnID1, String txnID2) {
+		
 	}
 
 	private void writeTransaction(String txnID, int varID, int value) {

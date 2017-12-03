@@ -1,5 +1,6 @@
 
 import java.util.Queue;
+import java.util.Set;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,6 +26,8 @@ public class Transaction {
 	private boolean blocked;
 	private String transactionType;
 	private ArrayList<LockObj> locksHeldByTransaction;
+	private String transactionWaitingForCurrentTransaction;
+	private Set<String> transactionsWhichCurrentTransactionWaitsFor;
 
 	// used for rollbacks
 	public Queue<Operation> operations;
@@ -37,6 +40,7 @@ public class Transaction {
 		this.blocked = false;
 		this.transactionType = txnType;
 		this.locksHeldByTransaction = new ArrayList<LockObj>();
+		this.transactionsWhichCurrentTransactionWaitsFor = new HashSet<String>();
 	}
 
 	/**
@@ -179,5 +183,23 @@ public class Transaction {
 	public void addOperation(Operation opObj) {
 
 	}
+
+	public String getTransactionWaitingForCurrentTransaction() {
+		return transactionWaitingForCurrentTransaction;
+	}
+
+	public void setTransactionWaitingForCurrentTransaction(String transactionWaitingForCurrentTransaction) {
+		this.transactionWaitingForCurrentTransaction = transactionWaitingForCurrentTransaction;
+	}
+
+	public Set<String> getTransactionsWhichCurrentTransactionWaitsFor() {
+		return transactionsWhichCurrentTransactionWaitsFor;
+	}
+
+	public void setTransactionsWhichCurrentTransactionWaitsFor(Set<String> transactionsWhichCurrentTransactionWaitsFor) {
+		this.transactionsWhichCurrentTransactionWaitsFor = transactionsWhichCurrentTransactionWaitsFor;
+	}
+	
+	
 
 }
