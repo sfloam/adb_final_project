@@ -35,7 +35,7 @@ public class Site {
 		StringBuilder siteInformation = new StringBuilder();
 		siteInformation.append("Site ID: " + this.id + "\n");
 		
-		for (int i = 0; i < this.dataTable.getDT().size(); i++) {
+		for (int i = 0; i <= this.dataTable.getDT().size(); i++) {
 			String variableInformation = "";
 			if (this.dataTable.getDT().containsKey(i)) {
 				variableInformation = this.dataTable.getDT().get(i).getID() + " = " + this.dataTable.getDT().get(i).getValue();
