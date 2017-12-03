@@ -21,7 +21,7 @@ public class Site {
 		this.id = id;
 		this.lt = new LockTable();
 		this.dataTable = new DataTable(id);
-
+		this.isUp = true;
 	}
 
 	/**
