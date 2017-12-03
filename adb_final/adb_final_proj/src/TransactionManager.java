@@ -284,8 +284,19 @@ public class TransactionManager {
 				waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().remove(txnID);
 				ArrayList<Operation> waitingTxnOpList = transactionWaitList.get(waitingTxnID);
 				Operation firstWaitingOperation = waitingTxnOpList.get(0);
-				int firstWaitingOperationVariable = firstWaitingOperation.getVariableID();
-				// get read or write
+				String firstWaitingOperationType = firstWaitingOperation.getOperationType();
+				int firstWaitingOperationVariableID = firstWaitingOperation.getVariableID();
+				if(firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
+					obtainAllPossibleWriteLocksOnVariable(firstWaitingOperationVariableID, waitingTxnID);
+				}
+				if(waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
+					transactionWaitList.remove(waitingTransaction);
+					if(firstWaitingOperationType.equals(GlobalConstants.readLock)) {
+						readTransaction(waitingTxnID, firstWaitingOperationVariableID);
+					} else if(firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
+						writeTransaction(waitingTxnID, firstWaitingOperationVariableID, firstWaitingOperation.getValue());
+					}
+				}
 			}
 		}
 	}
