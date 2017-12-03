@@ -1,6 +1,42 @@
 import java.util.ArrayList;
 
 public class ScrapWork {
+	/**
+	 * isWriteInstructionNotAllowed is used to determine if we can write a value to a variable. 
+	 * The method simply returns true if the Variable is locked by another Transaction or false 
+	 * if it is not.
+	 * 
+	 * @param varInt
+	 * @param transInt
+	 * @return Returns weather the Variable is locked by another transaction or not
+	 */
+	public boolean isWriteInstructionNotAllowed(Integer varInt, Integer transInt) {
+		// TODO: check if the the current variable is locked and if the current
+		// tranaction doesn't hold the lock
+		return true;
+	}
+
+	
+	/**
+	 * executeWriteInstruction
+	 * <ul>
+	 * <li> parse varID, transID, and varValue</li>
+	 * <li> If the variable is locked because of another Transaction, we need some action</li>
+	 * <li> Otherwise, lock the Variable, assign previousTransactionID to the ID of the 
+	 * 		Transaction performing the write, and that Variable's correspondingTrasactionID
+	 * 		HashSet<Integer> to include this Transaction's ID</li>
+	 * 
+	 * I imagine that having this correspondingTransactionID will allow us to keep track of which
+	 * Transactions are associated with which variables. This may not be necessary though in the
+	 * long run since all Transaction(s) have associated Variable IDs in their correspondingVariables.
+	 * Confirm before removing.
+	 *
+	 * @param operation (i.e. [W, T4, x4, 35])
+	 */
+	public void executeWriteInstruction(ArrayList<String> operation) {
+
+	}
+
 	/*
 	 * public void assignTransaction(ArrayList<String> operation) { // TODO: need to
 	 * address abortions if (operation.get(0).equalsIgnoreCase("begin")) { boolean

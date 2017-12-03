@@ -1,10 +1,7 @@
-import java.util.LinkedList;
-import java.util.Queue;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * <h1>Transaction Manager</h1> 
@@ -31,14 +28,14 @@ public class TransactionManager {
 	private HashMap<Integer, Site> allSitesMap;
 	private HashMap<String, Transaction> currentTransactions;
 	private int time;
-	private HashMap<String,ArrayList<Operation>> transactionWaitList;
+	private HashMap<String, ArrayList<Operation>> transactionWaitList;
 
 	public TransactionManager() {
 		// TODO: May not need all of these
 		this.time = 0;
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
-		transactionWaitList = new HashMap<String,ArrayList<Operation>>();
+		transactionWaitList = new HashMap<String, ArrayList<Operation>>();
 		allSitesMap = new HashMap<Integer, Site>();
 		this.age = 0;
 		this.dmList = new ArrayList<DataManager>();
@@ -49,7 +46,6 @@ public class TransactionManager {
 				dmList.add(new DataManager(i));
 				allSitesMap.put(i, dmList.get(i).getSite());
 			}
-
 		}
 	}
 
@@ -179,21 +175,33 @@ public class TransactionManager {
 	}
 
 	// TODO find out what is going on with writes and why not copying
-	// Todo locking
-	// Todo readling checks
-
 	private void endTransaction(String txnID) {
 		Iterator<Integer> eachVar = currentTransactions.get(txnID).getCorrespondingVars().iterator();
+		Integer nextVar;
 		while (eachVar.hasNext()) {
+			nextVar = eachVar.next();
+			int numberOfSitesAvaialbe = 0;
 			for (DataManager eachDM : dmList) {
-				if (eachDM==null) {
+				if (eachDM == null) {
+					// skip the first and failed sites
 					continue;
-				} else if (eachDM.getSite().getDataTable().getDT().containsKey(eachVar))
-					eachDM.getSite().getDataTable().getDT().get(eachVar)
-							.setValue(eachDM.getSite().getDataTable().getDT().get(eachVar).getIntermediateValue());
+				} else if (eachDM.getSite().getDataTable().getDT() != null
+						&& eachDM.getSite().getDataTable().getDT().containsKey(nextVar)) {
+					numberOfSitesAvaialbe++;
+					// update variable value in site DT
+					eachDM.getSite().getDataTable().getDT().get(nextVar)
+							.setValue(eachDM.getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
+					// remove all txn locks
+					eachDM.getSite().getLT().removeLockOnTransactionID(txnID);
+				}
+			}
+			if (numberOfSitesAvaialbe == 0) {
+				System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+				abort(currentTransactions.get(txnID));
+				break;
 			}
 		}
-		
+		currentTransactions.remove(txnID);
 	}
 
 	private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
@@ -283,7 +291,7 @@ public class TransactionManager {
 
 	private void insertToWaitList(String txnID, Operation newOp) {
 		ArrayList<Operation> transactionOps;
-		if(transactionWaitList.containsKey(txnID)) {
+		if (transactionWaitList.containsKey(txnID)) {
 			transactionOps = transactionWaitList.get(txnID);
 			transactionOps.add(newOp);
 		} else {
@@ -295,25 +303,26 @@ public class TransactionManager {
 
 	private void executeOrInformWaitingTransaction(String txnID) {
 		Transaction presentTransaction = this.currentTransactions.get(txnID);
-		if(presentTransaction.getTransactionWaitingForCurrentTransaction() != null) {
-			Transaction waitingTransaction = this.currentTransactions.get(presentTransaction.getTransactionWaitingForCurrentTransaction());
+		if (presentTransaction.getTransactionWaitingForCurrentTransaction() != null) {
+			Transaction waitingTransaction = this.currentTransactions
+					.get(presentTransaction.getTransactionWaitingForCurrentTransaction());
 			String waitingTxnID = waitingTransaction.getID();
-			if(transactionWaitList.size() > 0
-					&& transactionWaitList.containsKey(waitingTxnID)) {
+			if (transactionWaitList.size() > 0 && transactionWaitList.containsKey(waitingTxnID)) {
 				waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().remove(txnID);
 				ArrayList<Operation> waitingTxnOpList = transactionWaitList.get(waitingTxnID);
 				Operation firstWaitingOperation = waitingTxnOpList.get(0);
 				String firstWaitingOperationType = firstWaitingOperation.getOperationType();
 				int firstWaitingOperationVariableID = firstWaitingOperation.getVariableID();
-				if(firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
+				if (firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
 					obtainAllPossibleWriteLocksOnVariable(firstWaitingOperationVariableID, waitingTxnID);
 				}
-				if(waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
+				if (waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
 					transactionWaitList.remove(waitingTransaction);
-					if(firstWaitingOperationType.equals(GlobalConstants.readLock)) {
+					if (firstWaitingOperationType.equals(GlobalConstants.readLock)) {
 						readTransaction(waitingTxnID, firstWaitingOperationVariableID);
-					} else if(firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
-						writeTransaction(waitingTxnID, firstWaitingOperationVariableID, firstWaitingOperation.getValue());
+					} else if (firstWaitingOperationType.equals(GlobalConstants.writeLock)) {
+						writeTransaction(waitingTxnID, firstWaitingOperationVariableID,
+								firstWaitingOperation.getValue());
 					}
 				}
 			}
@@ -333,6 +342,7 @@ public class TransactionManager {
 		}
 	}
 
+	// TODO: Still not recording write value to commit in intermmediate
 	private void writeTransaction(String txnID, int varID, int value) {
 		currentTransactions.get(txnID).addToCorrespondingVars(varID);
 		if (currentTransactions.containsKey(txnID)) {
@@ -441,7 +451,6 @@ public class TransactionManager {
 				}
 			}
 		}
-
 		if (var != null) {
 			return var.getValue();
 		} else {
@@ -460,45 +469,6 @@ public class TransactionManager {
 
 	private void recoverSite(int siteID) {
 		// TODO: RECOVER SITE
-	}
-
-	/**
-	 * executeWriteInstruction
-	 * <ul>
-	 * <li> parse varID, transID, and varValue</li>
-	 * <li> If the variable is locked because of another Transaction, we need some action</li>
-	 * <li> Otherwise, lock the Variable, assign previousTransactionID to the ID of the 
-	 * 		Transaction performing the write, and that Variable's correspondingTrasactionID
-	 * 		HashSet<Integer> to include this Transaction's ID</li>
-	 * 
-	 * I imagine that having this correspondingTransactionID will allow us to keep track of which
-	 * Transactions are associated with which variables. This may not be necessary though in the
-	 * long run since all Transaction(s) have associated Variable IDs in their correspondingVariables.
-	 * Confirm before removing.
-	 *
-	 * @param operation (i.e. [W, T4, x4, 35])
-	 */
-	public void executeWriteInstruction(ArrayList<String> operation) {
-
-	}
-
-	/**
-	 * isWriteInstructionNotAllowed is used to determine if we can write a value to a variable. 
-	 * The method simply returns true if the Variable is locked by another Transaction or false 
-	 * if it is not.
-	 * 
-	 * @param varInt
-	 * @param transInt
-	 * @return Returns weather the Variable is locked by another transaction or not
-	 */
-	public boolean isWriteInstructionNotAllowed(Integer varInt, Integer transInt) {
-		// TODO: check if the the current variable is locked and if the current
-		// tranaction doesn't hold the lock
-		return true;
-	}
-
-	public void executeReadInstruction(ArrayList<String> operation) {
-		// TODO: build this
 	}
 
 	// TODO: Identify what needs to happen during an abortion
@@ -530,21 +500,31 @@ public class TransactionManager {
 	// TODO : Fix Abort functionaltiy
 	public void abort(Transaction youngestTransaction) {
 		System.out.println("Aborted Trxn: " + youngestTransaction);
+		// add to list of aborted txns
 		aborted.add(youngestTransaction);
+		// get txnID of aborted txn
 		String txnID = youngestTransaction.getID();
+		// remove all locks held by txn
+		for (DataManager eachDM : dmList) {
+			if (eachDM == null) {
+				continue;
+			} else {
+				eachDM.getSite().getLT().removeLockOnTransactionID(txnID);
+			}
+		}
+		// iterate all the variables touched by a trxn to set intermediate to init value
 		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
-
-		// get vars associated with youngest transaction
 		while (correspondingVarIDs.hasNext()) {
 			int varID = correspondingVarIDs.next();
-
-			// use varIDs to identify sites where locks may be issued by this transaction
 			Iterator<DataManager> eachDM = dmList.iterator();
 			while (eachDM.hasNext()) {
-				Site site = eachDM.next().getSite();
-				// confirm that the variable at a site was in fact locked by this transaction
-				if (site.getLT().isLockWithTransactionIDAndVarIDPresent(txnID, varID)) {
-					currentTransactions.remove(txnID);
+				DataManager dm = eachDM.next();
+				if (dm == null) {
+					continue;
+				} else {
+					Site site = dm.getSite();
+					// Restore to intialized value
+					site.getDataTable().getDT().get(varID).setIntermediateValue(varID * 10);
 				}
 			}
 		}
