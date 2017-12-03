@@ -14,7 +14,7 @@ import java.util.HashMap;
  */
 public class Site {
 	private int id;
-	private ArrayList<Variable> variablesOnSite;
+//	private ArrayList<Variable> variablesOnSite;
 	private LockTable lt;
 	private DataTable dataTable;
 
@@ -42,9 +42,13 @@ public class Site {
 	public String toString() {
 		StringBuilder siteInformation = new StringBuilder();
 		siteInformation.append("Site ID: " + this.id);
-		for (int i = 0; i < variablesOnSite.size(); i++) {
-			String variableInformation = variablesOnSite.get(i).getID() + " = " + variablesOnSite.get(i).getValue();
-			siteInformation.append(" - " + variableInformation + "\n");
+		
+		for (int i = 0; i < this.dataTable.getDT().size(); i++) {
+			String variableInformation = "";
+			if (this.dataTable.getDT().containsKey(i)) {
+				variableInformation = this.dataTable.getDT().get(i).getID() + " = " + this.dataTable.getDT().get(i).getValue();
+				siteInformation.append(" - " + variableInformation + "\n");
+			}
 		}
 		return siteInformation.toString();
 	}
@@ -93,6 +97,6 @@ public class Site {
 	}
 
 	public ArrayList<Variable> getVariablesOnSite() {
-		return this.variablesOnSite;
+		return (ArrayList<Variable>)this.dataTable.getDT().values();
 	}
 }
