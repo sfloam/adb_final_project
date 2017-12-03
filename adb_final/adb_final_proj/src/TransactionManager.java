@@ -29,12 +29,14 @@ public class TransactionManager {
 	private HashMap<String, Transaction> currentTransactions;
 	private int time;
 	private HashMap<String, ArrayList<Operation>> transactionWaitList;
+	private HashMap<String, Transaction> blockedTransactions;
 
 	public TransactionManager() {
 		// TODO: May not need all of these
 		this.time = 0;
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
+		blockedTransactions = new HashMap<String, Transaction>();
 		transactionWaitList = new HashMap<String, ArrayList<Operation>>();
 		allSitesMap = new HashMap<Integer, Site>();
 		this.age = 0;
@@ -278,6 +280,7 @@ public class TransactionManager {
 						if (transactionUnderConsideration.getTransactionWaitingForCurrentTransaction() == null) {
 							transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
 							transactionUnderConsideration.setBlocked(true);
+							blockedTransactions.put(transactionUnderConsideration.getID(),transactionUnderConsideration);
 							presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
 						} else {
 							// check for deadlock
@@ -459,6 +462,8 @@ public class TransactionManager {
 			currentTransactions.get(txnID).operations.add(op);
 			// needed for deadlock
 			currentTransactions.get(txnID).setBlocked(true);
+			blockedTransactions.put(currentTransactions.get(txnID).getID(),currentTransactions.get(txnID));
+
 			return -1;
 		}
 	}
@@ -480,14 +485,17 @@ public class TransactionManager {
 		Transaction youngestTransaction = null;
 		Integer youngestTransactionAge = -1;
 
-		Iterator<String> currTrans = currentTransactions.keySet().iterator();
-		while (currTrans.hasNext()) {
-			if (currentTransactions.get(currTrans).getAge() > youngestTransactionAge) {
-				youngestTransactionAge = currentTransactions.get(currTrans).getAge();
-				youngestTransaction = currentTransactions.get(currTrans);
+		Iterator<String> eachTransaction = blockedTransactions.keySet().iterator();
+		while (eachTransaction.hasNext()) {
+			String currTrans = eachTransaction.next();
+			if (blockedTransactions.get(currTrans).getAge() > youngestTransactionAge) {
+				youngestTransactionAge = blockedTransactions.get(currTrans).getAge();
+				youngestTransaction = blockedTransactions.get(currTrans);
+				
 			}
-			if (!currentTransactions.get(currTrans).isBlocked()) {
+			if (!blockedTransactions.get(currTrans).isBlocked()) {
 				isDeadlocked = false;
+				System.out.println("NO DEADLOCK");
 			}
 		}
 
