@@ -148,5 +148,9 @@ public class Site {
 	  HashMap<Integer,Variable> copy = new HashMap<Integer,Variable>(this.dataTable.getDT());
 	  this.RODataTable.put(txnID, copy);
   }
+  
+  public HashMap<Integer,Variable> getRODataTable(String txnID){
+	  return this.RODataTable.get(txnID);
+  }
 
 }
