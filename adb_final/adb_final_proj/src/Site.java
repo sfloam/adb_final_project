@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * 
@@ -14,12 +15,14 @@ public class Site {
   private int id;
   private LockTable lt;
   private DataTable dataTable;
+  private HashMap<String,HashMap<Integer,Variable>> RODataTable;
   private boolean isUp;
 
   public Site(int id) {
     this.id = id;
     this.lt = new LockTable();
     this.dataTable = new DataTable(id);
+    this.RODataTable = new HashMap<String,HashMap<Integer,Variable>>();
     this.isUp = true;
   }
 
@@ -138,6 +141,16 @@ public class Site {
   public void initiateWriteToVariables(int varID, int value) {
     Variable currentVariable = dataTable.getDT().get(varID);
     currentVariable.setIntermediateValue(value);
+  }
+  
+  //Sets deep copy of DT in RODT
+  public void setRODataTable(String txnID) {
+	  HashMap<Integer,Variable> copy = new HashMap<Integer,Variable>(this.dataTable.getDT());
+	  this.RODataTable.put(txnID, copy);
+  }
+  
+  public HashMap<Integer,Variable> getRODataTable(String txnID){
+	  return this.RODataTable.get(txnID);
   }
 
 }

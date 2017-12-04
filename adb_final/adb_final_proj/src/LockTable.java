@@ -78,19 +78,19 @@ public class LockTable {
   }
 
   public void removeLockOnTransactionID(String txnID) {
-    for (LockObj eachLock : lockTable) {
-      if (eachLock.getTransactionID().equals(txnID)) {
-        lockTable.remove(eachLock);
-      }
-    }
+	for (int i = 0; i < lockTable.size(); i++) {
+		if (lockTable.get(i).getTransactionID().equals(txnID)) {
+			lockTable.remove(lockTable.get(i));
+		}
+	}
   }
 
   public ArrayList<LockObj> getAllLocksForVariable(int varID) {
     ArrayList<LockObj> variableLocks = new ArrayList<LockObj>();
-    for (LockObj eachLock : lockTable) {
-      if (eachLock.getVariableID() == varID) {
-        variableLocks.add(eachLock);
-      }
+    for (int i = 0; i < lockTable.size(); i++) {
+    		if (lockTable.get(i).getVariableID() == varID) {
+    			variableLocks.add(lockTable.get(i));
+    		}
     }
     return variableLocks;
   }
