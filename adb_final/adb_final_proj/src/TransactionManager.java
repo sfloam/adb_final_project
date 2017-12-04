@@ -473,7 +473,7 @@ public class TransactionManager {
 	}
 
 	private void recoverSite(int siteID) {
-		// TODO: RECOVER SITE
+		dmList.get(siteID).getSite().recover();
 	}
 
 	// TODO: Identify what needs to happen during an abortion

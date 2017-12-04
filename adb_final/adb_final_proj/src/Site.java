@@ -70,6 +70,13 @@ public class Site {
 		}
 		lt.getLockTable().clear();
 	}
+	
+	public void recover() {
+		if(!this.isUp) {
+			this.isUp = true;
+			
+		}
+	}
 
 	/**
 	 * getLT
