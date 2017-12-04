@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Set;
 
 public class ScrapWork {
 	/**
@@ -15,7 +16,77 @@ public class ScrapWork {
 		// tranaction doesn't hold the lock
 		return true;
 	}
+	
+	private void RETROACTIVEWRONGendTransaction(String txnID) {
+//      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
+//      Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
+//      for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
+//        int numberOfSitesAvaialbe = 0;
+//        int nextVar = ctIntArr[ctIndex];
+//        for (int dmIndex = 1; dmIndex < dmList.size(); dmIndex++) {
+//          if (dmList.get(dmIndex).getSite().getDataTable().getDT() != null 
+//              && dmList.get(dmIndex).getSite().getDataTable().getDT().containsKey(nextVar)) {
+//            
+//            if (dmList.get(dmIndex).getSite().isPreviouslyFailed()) {
+//              if (updateRecoveredSites(nextVar)!=null) {
+//                dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).setIntermediateValue(updateRecoveredSites(nextVar));
+//              }
+//              else {
+//                System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+//                abort(currentTransactions.get(txnID));
+//                numberOfSitesAvaialbe = 0;
+//                break;
+//              }
+//            }
+//           
+//            numberOfSitesAvaialbe++;
+//            
+//            // update variable value in site DT
+//            dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar)
+//              .setValue(dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
+//            
+//            // remove all txn locks
+//            dmList.get(dmIndex).getSite().getLT().removeLockOnTransactionID(txnID);
+//          }
+//        }
+//        if (numberOfSitesAvaialbe == 0) {
+//          System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+//          abort(currentTransactions.get(txnID));
+//          break;
+//        }
+//      }
+//        currentTransactions.remove(txnID);
+    }
 
+	public void endTxnOldLogic(){
+    // Iterator<Integer> eachVar = currentTransactions.get(txnID).getCorrespondingVars().iterator();
+    // Integer nextVar;
+    // while (eachVar.hasNext()) {
+    // nextVar = eachVar.next();
+    // int numberOfSitesAvaialbe = 0;
+    // for (DataManager eachDM : dmList) {
+    // if (eachDM == null) {
+    // // skip the first and failed sites
+    // continue;
+    // } else if (eachDM.getSite().getDataTable().getDT() != null
+    // && eachDM.getSite().getDataTable().getDT().containsKey(nextVar)) {
+    // numberOfSitesAvaialbe++;
+    // // update variable value in site DT
+    // eachDM.getSite().getDataTable().getDT().get(nextVar)
+    // .setValue(eachDM.getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
+    // // remove all txn locks
+    // eachDM.getSite().getLT().removeLockOnTransactionID(txnID);
+    // }
+    // }
+    // if (numberOfSitesAvaialbe == 0) {
+    // System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+    // abort(currentTransactions.get(txnID));
+    // break;
+    // }
+    // currentTransactions.remove(txnID);
+    // }
+	}
+	
 	
 	/**
 	 * executeWriteInstruction
