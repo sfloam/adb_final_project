@@ -1,0 +1,21 @@
+#!/bin/bash
+
+rm ~/Desktop/Tests/TestActualSingle/TestActual/Actual_Test_"$@".txt
+cd ~/GitHub/adb_final_project/adb_final/adb_final_proj/src
+
+javac *.java
+
+echo '---------------------------------'; 
+echo 'Test' "$@";
+echo '---------------------------------'; 
+touch ~/Desktop/Tests/TestActualSingle/TestActual/Actual_Test_"$@".txt
+
+java ExecuteTransactions ~/Desktop/Tests/TestActualSingle/Test_"$@".txt >> ~/Desktop/Tests/TestActualSingle/TestActual/Actual_Test_"$@".txt;
+java ExecuteTransactions ~/Desktop/Tests/TestActualSingle/Test_"$@".txt Test_"$@".txt
+
+rm *.class
+
+echo '---------------------------------'; 
+echo 'Test' "$@";
+echo '---------------------------------'; 
+diff ~/Desktop/Tests/TestActualSingle/TestActual/Actual_Test_"$@".txt ~/Desktop/Tests/TestActualSingle/TestExpected/Expected_Test_"$@".txt
