@@ -54,6 +54,11 @@ public class ExecuteTransactions {
     }
   }
 
+  public static boolean isNewTestCase(String line) {
+	Pattern commentPattern = Pattern.compile("Test");
+	Matcher commentMatcher = commentPattern.matcher(line);
+	return commentMatcher.find();
+  }
   public static boolean isComment(String line) {
     Pattern commentPattern = Pattern.compile("//");
     Matcher commentMatcher = commentPattern.matcher(line);

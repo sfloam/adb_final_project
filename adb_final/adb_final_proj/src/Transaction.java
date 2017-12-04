@@ -26,7 +26,7 @@ public class Transaction {
   private ArrayList<LockObj> locksHeldByTransaction;
   private String transactionWaitingForCurrentTransaction;
   private Set<String> transactionsWhichCurrentTransactionWaitsFor;
-
+  private boolean readOnly;
   // used for rollbacks
   public Queue<Operation> operations;
 
@@ -38,6 +38,7 @@ public class Transaction {
     this.transactionType = txnType;
     this.locksHeldByTransaction = new ArrayList<LockObj>();
     this.transactionsWhichCurrentTransactionWaitsFor = new HashSet<String>();
+    this.readOnly = txnType.equals("RO");
   }
 
   /**
@@ -200,6 +201,10 @@ public class Transaction {
       }
     }
     return allLocksForVariable;
+  }
+  
+  public boolean isReadOnly() {
+	  return this.readOnly;
   }
 
 }
