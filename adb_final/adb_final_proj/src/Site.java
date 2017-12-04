@@ -127,7 +127,11 @@ public class Site {
   }
 
   public ArrayList<Variable> getVariablesOnSite() {
-    return (ArrayList<Variable>) this.dataTable.getDT().values();
+    ArrayList<Variable> variablesOnSite = new ArrayList<Variable>();
+    for(int varID : this.dataTable.getDT().keySet()) {
+      variablesOnSite.add(this.dataTable.getDT().get(varID));
+    }
+    return variablesOnSite;
   }
 
   public boolean isUp() {

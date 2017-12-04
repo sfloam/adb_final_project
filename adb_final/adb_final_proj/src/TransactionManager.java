@@ -178,7 +178,7 @@ public class TransactionManager {
 			int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
 			failSite(siteID);
 		} else if (operationLine.startsWith("recover(")) {
-			int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+			int siteID = Integer.parseInt(operationLine.substring(8, operationLine.length() - 1));
 			recoverSite(siteID);
 		}
 	}
