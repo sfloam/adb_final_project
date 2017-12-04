@@ -167,8 +167,7 @@ public class TransactionManager {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-			// System.out.println(transactionInfo[2]);
-			int valueToBeWritten = Integer.parseInt(transactionInfo[2]);
+			int valueToBeWritten = Integer.parseInt(transactionInfo[2].trim());
 			// TODO: You need to save the operation
 			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
 		} else if (operationLine.startsWith("end(")) {
