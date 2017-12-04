@@ -24,6 +24,7 @@ public class Variable {
     this.id = id;
     this.value = id * 10;
     this.isFreeToRead = true;
+    this.intermediateValue = this.value;
     // does a transaction have a this variable
     this.lock = false;
 
