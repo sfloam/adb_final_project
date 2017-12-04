@@ -150,6 +150,7 @@ public class TransactionManager {
 		} else if (operationLine.startsWith("beginRO(")) {
 			String transactionName = operationLine.substring(8, operationLine.length() - 1);
 			startTransaction(transactionName, GlobalConstants.readOnlyBegin);
+			createROTablesForTransaction(transactionName);
 		} else if (operationLine.startsWith("R(")) {
 			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
@@ -187,6 +188,16 @@ public class TransactionManager {
 			Transaction newTransaction = new Transaction(txnID, transactionType);
 			newTransaction.setAge(age);
 			currentTransactions.put(txnID, newTransaction);
+		}
+	}
+	
+	private void createROTablesForTransaction(String transactionName) {
+		for (int i = 1; i < dmList.size(); i++) {
+			if(dmList.get(i).getSite()!= null){
+				dmList.get(i).getSite().setRODataTable(transactionName);
+			} else {
+				System.out.println("Site Down. Called from createROTablesForTransaction!");
+			}
 		}
 	}
 
