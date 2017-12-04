@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cd ~/GitHub/adb_final_project/adb_final/adb_final_proj/src
+
+javac *.java
+
+for i in {1..20}; 
+
+do 
+echo '---------------------------------'; 
+echo 'Test' $i;
+echo '---------------------------------'; 
+java ExecuteTransactions ~/GitHub/adb_final_project/adb_final/adb_final_proj/projectsampletests$i.txt;
+
+done
+rm *.class
