@@ -17,3 +17,5 @@ W(T1, x5,91)
 recover(2)
 end(T2)
 end(T1)
+dump()
+//test dump added
