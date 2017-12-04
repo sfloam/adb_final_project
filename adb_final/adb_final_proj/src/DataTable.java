@@ -21,6 +21,10 @@ public class DataTable {
     this.dt.get(varID).setValue(value);
   }
 
+  public void updateIntermediateValue(int varID, int intermediateVal) {
+    this.dt.get(varID).setIntermediateValue(intermediateVal);
+  }
+
   public HashMap<Integer, Variable> getDT() {
     return this.dt;
   }

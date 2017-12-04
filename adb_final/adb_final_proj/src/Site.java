@@ -141,6 +141,7 @@ public class Site {
   public void initiateWriteToVariables(int varID, int value) {
     Variable currentVariable = dataTable.getDT().get(varID);
     currentVariable.setIntermediateValue(value);
+    this.dataTable.updateIntermediateValue(varID, value);
   }
   
   //Sets deep copy of DT in RODT
