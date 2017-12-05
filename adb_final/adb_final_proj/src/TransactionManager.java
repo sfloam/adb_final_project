@@ -162,6 +162,9 @@ public class TransactionManager {
 				// TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
 			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
+	            Operation newOperation =
+	                new Operation(time, GlobalConstants.readOperation, varID, value);
+	            insertToWaitList(transactionInfo[0], newOperation);
 			} else {
 				abort(currentTransactions.get(transactionInfo[0]));
 			}
@@ -229,6 +232,7 @@ public class TransactionManager {
           break;
         }
       }
+        executeOrInformWaitingTransaction(txnID);
 		currentTransactions.remove(txnID);
 	}
 
@@ -310,8 +314,7 @@ public class TransactionManager {
               blockedTransactions.put(presentTransaction.getID(),presentTransaction);
               presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
             } else {
-              // check for deadlock
-              resolveDeadLock();
+              checkIfDeadlocked(txnID,transactionUnderConsideration.getID());
             }
           }
         }
@@ -349,8 +352,10 @@ public class TransactionManager {
         if (waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
           transactionWaitList.remove(waitingTransaction.getID());
           if (firstWaitingOperationType.equals(GlobalConstants.readOperation)) {
+            waitingTransaction.setBlocked(false);
             readTransaction(waitingTxnID, firstWaitingOperationVariableID);
           } else if (firstWaitingOperationType.equals(GlobalConstants.writeOperation)) {
+            waitingTransaction.setBlocked(false);
             writeTransaction(waitingTxnID, firstWaitingOperationVariableID,
                 firstWaitingOperation.getValue());
           }
