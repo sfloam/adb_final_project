@@ -69,10 +69,10 @@ public class LockTable {
   }
 
   public void removeLock(String lockType, String txnId, int varID) {
-    for (LockObj eachLock : lockTable) {
-      if (eachLock.getLockType().equals(lockType) && eachLock.getTransactionID().equals(txnId)
-          && eachLock.getVariableID() == varID) {
-        lockTable.remove(eachLock);
+    for(int i = 0; i < lockTable.size(); i++) {
+      if (lockTable.get(i).getLockType().equals(lockType) && lockTable.get(i).getTransactionID().equals(txnId)
+          && lockTable.get(i).getVariableID() == varID) {
+        lockTable.remove(lockTable.get(i));
       }
     }
   }

@@ -39,4 +39,15 @@ public class LockObj {
     return this.variableID + " " + this.transactionID + " " + this.lockType;
   }
 
+  @Override
+  public boolean equals(Object obj) {
+    boolean isEqual = false;
+    LockObj currentLock = (LockObj) obj;
+    if(this.transactionID.equals(currentLock.getTransactionID())
+        && this.lockType.equals(currentLock.getLockType()) && this.variableID == currentLock.getVariableID()) {
+      isEqual = true;
+    }
+    return isEqual;
+  }
+
 }
