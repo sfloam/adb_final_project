@@ -17,6 +17,7 @@ public class Site {
   private DataTable dataTable;
   private HashMap<String,HashMap<Integer,Variable>> RODataTable;
   private boolean isUp;
+  private boolean previouslyFailed;
 
   public Site(int id) {
     this.id = id;
@@ -24,6 +25,8 @@ public class Site {
     this.dataTable = new DataTable(id);
     this.RODataTable = new HashMap<String,HashMap<Integer,Variable>>();
     this.isUp = true;
+    this.previouslyFailed = false;
+    
   }
 
   /**
@@ -36,7 +39,7 @@ public class Site {
     StringBuilder siteInformation = new StringBuilder();
     siteInformation.append("Site ID: " + this.id + "\n");
 
-    for (int i = 0; i <= this.dataTable.getDT().size(); i++) {
+    for (int i = 1; i <= 20; i++) {
       String variableInformation = "";
       if (this.dataTable.getDT().containsKey(i)) {
         variableInformation = this.dataTable.getDT().get(i).getID() + " = "
@@ -64,6 +67,7 @@ public class Site {
    */
   public void fail() {
     this.isUp = false;
+    this.previouslyFailed = true;
     ArrayList<LockObj> allLockTableObj = lt.getLockTable();
     for (LockObj eachLock : allLockTableObj) {
       // set intermediate value back to actual value
@@ -156,6 +160,10 @@ public class Site {
   
   public HashMap<Integer,Variable> getRODataTable(String txnID){
 	  return this.RODataTable.get(txnID);
+  }
+  
+  public boolean isPreviouslyFailed() {
+    return this.previouslyFailed;
   }
 
 }
