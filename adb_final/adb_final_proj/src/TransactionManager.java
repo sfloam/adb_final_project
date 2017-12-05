@@ -161,7 +161,7 @@ public class TransactionManager {
 			if (value != -1 && value != -2) {
 				// TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
-				resolveDeadLock();
+			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
 			} else {
 				abort(currentTransactions.get(transactionInfo[0]));
 			}
@@ -304,12 +304,10 @@ public class TransactionManager {
           for (LockObj eachLock : allLocksAtSite) {
             String lockTxnID = eachLock.getTransactionID();
             Transaction transactionUnderConsideration = this.currentTransactions.get(lockTxnID);
-            if (transactionUnderConsideration
-                .getTransactionWaitingForCurrentTransaction() == null) {
+            if (transactionUnderConsideration.getTransactionWaitingForCurrentTransaction() == null) {
               transactionUnderConsideration.setTransactionWaitingForCurrentTransaction(txnID);
               presentTransaction.setBlocked(true);
-              blockedTransactions.put(presentTransaction.getID(),
-                  presentTransaction);
+              blockedTransactions.put(presentTransaction.getID(),presentTransaction);
               presentTransaction.getTransactionsWhichCurrentTransactionWaitsFor().add(lockTxnID);
             } else {
               // check for deadlock
