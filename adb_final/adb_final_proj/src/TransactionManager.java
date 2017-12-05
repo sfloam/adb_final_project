@@ -382,6 +382,7 @@ public class TransactionManager {
   private void checkIfDeadlocked(String txnID, String olderTxnID) {
     Transaction txn1 = this.currentTransactions.get(txnID);
     Transaction txn2 = this.currentTransactions.get(olderTxnID);
+
     if(txn2.getTransactionsWhichCurrentTransactionWaitsFor().contains(txnID)
         && txn1.getTransactionsWhichCurrentTransactionWaitsFor().contains(olderTxnID)) {
       //deadlock
@@ -390,6 +391,28 @@ public class TransactionManager {
       } else {
         this.abort(txn1);
       }
+    } else if(txn2.getTransactionWaitingForCurrentTransaction() != null) {
+      if(!txn2.getTransactionWaitingForCurrentTransaction().equals(txnID)) {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        checkIfDeadlocked(txnID,waitingTxnID);
+        //waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+        //txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+      } else {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        if(!waitingTxnID.equals(txnID)) {
+          waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+          txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+        }
+      }
+    } else{
+      txn2.setTransactionWaitingForCurrentTransaction(txnID);
+      txn1.setBlocked(true);
+      blockedTransactions.put(txn1.getID(),txn1);
+      txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(txn2.getID());
     }
   }
 
