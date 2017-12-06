@@ -365,36 +365,67 @@ public class TransactionManager {
     if (presentTransaction.getTransactionWaitingForCurrentTransaction() != null) {
       Transaction waitingTransaction = this.currentTransactions
           .get(presentTransaction.getTransactionWaitingForCurrentTransaction());
-      String waitingTxnID = waitingTransaction.getID();
-      if (transactionWaitList.size() > 0 && transactionWaitList.containsKey(waitingTxnID)) {
-        waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().remove(txnID);
-        ArrayList<Operation> waitingTxnOpList = transactionWaitList.get(waitingTxnID);
-        Operation firstWaitingOperation = waitingTxnOpList.get(0);
-        String firstWaitingOperationType = firstWaitingOperation.getOperationType();
-        int firstWaitingOperationVariableID = firstWaitingOperation.getVariableID();
-        if (firstWaitingOperationType.equals(GlobalConstants.writeOperation)) {
-          obtainAllPossibleWriteLocksOnVariable(firstWaitingOperationVariableID, waitingTxnID);
-        }
-        if (waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
-          transactionWaitList.remove(waitingTransaction.getID());
-          if (firstWaitingOperationType.equals(GlobalConstants.readOperation)) {
-            waitingTransaction.setBlocked(false);
-            readTransaction(waitingTxnID, firstWaitingOperationVariableID);
 
-          } else if (firstWaitingOperationType.equals(GlobalConstants.writeOperation)) {
-            waitingTransaction.setBlocked(false);
-            writeTransaction(waitingTxnID, firstWaitingOperationVariableID,
-                firstWaitingOperation.getValue());
+      if(waitingTransaction != null) {
+        String waitingTxnID = waitingTransaction.getID();
+        if (transactionWaitList.size() > 0 && transactionWaitList.containsKey(waitingTxnID)) {
+          waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().remove(txnID);
+          ArrayList<Operation> waitingTxnOpList = transactionWaitList.get(waitingTxnID);
+          Operation firstWaitingOperation = waitingTxnOpList.get(0);
+          String firstWaitingOperationType = firstWaitingOperation.getOperationType();
+          int firstWaitingOperationVariableID = firstWaitingOperation.getVariableID();
+          if (firstWaitingOperationType.equals(GlobalConstants.writeOperation)) {
+            obtainAllPossibleWriteLocksOnVariable(firstWaitingOperationVariableID, waitingTxnID);
+          }
+          if (waitingTransaction.getTransactionsWhichCurrentTransactionWaitsFor().size() == 0) {
+            transactionWaitList.remove(waitingTransaction.getID());
+            if (firstWaitingOperationType.equals(GlobalConstants.readOperation)) {
+              waitingTransaction.setBlocked(false);
+              readTransaction(waitingTxnID, firstWaitingOperationVariableID);
+            } else if (firstWaitingOperationType.equals(GlobalConstants.writeOperation)) {
+              waitingTransaction.setBlocked(false);
+              writeTransaction(waitingTxnID, firstWaitingOperationVariableID,
+                  firstWaitingOperation.getValue());
+            }
           }
         }
       }
     }
   }
   
-  private boolean checkIfCycleExists() {
+  private void checkIfCycleExists(String txnID) {
     boolean cycleExists = false;
+    Transaction currentTxn = this.currentTransactions.get(txnID);
+    if(currentTxn.getTransactionWaitingForCurrentTransaction() != null) {
+      String waitingTxnID = currentTxn.getTransactionWaitingForCurrentTransaction();
+      Transaction waitingTxn = this.currentTransactions.get(waitingTxnID);
+      while(!cycleExists) {
+        waitingTxnID = waitingTxn.getTransactionWaitingForCurrentTransaction();
+        waitingTxn = this.currentTransactions.get(waitingTxnID);
+        if(waitingTxn == null) {
+          break;
+        } else if(waitingTxn.getID().equals(txnID)) {
+          cycleExists = true;
+        }
+      }
+    }
+    if(cycleExists) {
+      checkFindYoungestTransaction();
+    }
+  }
 
-    return cycleExists;
+  private void checkFindYoungestTransaction() {
+    int youngestAge = Integer.MIN_VALUE;
+    ArrayList<String> allTransactions = new ArrayList<String>(this.currentTransactions.keySet());
+    String youngestTxnID = this.currentTransactions.get(allTransactions.get(0)).getID();
+    for(String txnID : allTransactions) {
+      Transaction currentTxn = this.currentTransactions.get(txnID);
+      if(currentTxn.getAge() > youngestAge) {
+        youngestAge = currentTxn.getAge();
+        youngestTxnID = currentTxn.getID();
+      }
+    }
+    this.abort(this.currentTransactions.get(youngestTxnID));;
   }
     
   private void checkIfDeadlocked(String txnID, String olderTxnID) {
@@ -500,6 +531,7 @@ public class TransactionManager {
                   Operation newOperation =
                       new Operation(time, GlobalConstants.writeOperation, varID, value);
                   insertToWaitList(txnID, newOperation);
+                  checkIfCycleExists(txnID);
                   obtainAllPossibleWriteLocksOnVariable(varID, txnID);
                 }
               } else {
@@ -508,6 +540,7 @@ public class TransactionManager {
                 Operation newOperation =
                     new Operation(time, GlobalConstants.writeOperation, varID, value);
                 insertToWaitList(txnID, newOperation);
+                checkIfCycleExists(txnID);
                 obtainAllPossibleWriteLocksOnVariable(varID, txnID);
               }
             }
@@ -517,6 +550,7 @@ public class TransactionManager {
             Operation newOperation =
                 new Operation(time, GlobalConstants.writeOperation, varID, value);
             insertToWaitList(txnID, newOperation);
+            checkIfCycleExists(txnID);
             obtainAllPossibleWriteLocksOnVariable(varID, txnID);
           }
         } else {
@@ -697,6 +731,7 @@ public class TransactionManager {
 			}
 		}
         executeOrInformWaitingTransaction(txnID);
+        this.transactionWaitList.remove(txnID);
         currentTransactions.remove(txnID);
 	}
 
