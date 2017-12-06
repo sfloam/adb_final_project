@@ -207,33 +207,35 @@ public class TransactionManager {
 
 	// TODO find out what is going on with writes and why not copying
 	private void endTransaction(String txnID) {
-      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
-      Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
-      for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
-        int numberOfSitesAvaialbe = 0;
-        int nextVar = ctIntArr[ctIndex];
-        for (int dmIndex = 1; dmIndex < dmList.size(); dmIndex++) {
-          if (dmList.get(dmIndex).getSite().getDataTable().getDT() != null 
-              && dmList.get(dmIndex).getSite().getDataTable().getDT().containsKey(nextVar)) {
-            
-            numberOfSitesAvaialbe++;
-            
-            // update variable value in site DT
-            dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar)
-              .setValue(dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
-            
-            // remove all txn locks
-            dmList.get(dmIndex).getSite().getLT().removeLockOnTransactionID(txnID);
-          }
-        }
-        if (numberOfSitesAvaialbe == 0) {
-          System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
-          abort(currentTransactions.get(txnID));
-          break;
-        }
-      }
-        executeOrInformWaitingTransaction(txnID);
-		currentTransactions.remove(txnID);
+	  if(currentTransactions.containsKey(txnID)) {
+	      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
+	      Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
+	      for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
+	        int numberOfSitesAvaialbe = 0;
+	        int nextVar = ctIntArr[ctIndex];
+	        for (int dmIndex = 1; dmIndex < dmList.size(); dmIndex++) {
+	          if (dmList.get(dmIndex).getSite().getDataTable().getDT() != null 
+	              && dmList.get(dmIndex).getSite().getDataTable().getDT().containsKey(nextVar)) {
+
+	            numberOfSitesAvaialbe++;
+
+	            // update variable value in site DT
+	            dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar)
+	              .setValue(dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
+
+	            // remove all txn locks
+	            dmList.get(dmIndex).getSite().getLT().removeLockOnTransactionID(txnID);
+	          }
+	        }
+	        if (numberOfSitesAvaialbe == 0) {
+	          System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+	          abort(currentTransactions.get(txnID));
+	          break;
+	        }
+	      }
+	        executeOrInformWaitingTransaction(txnID);
+	        currentTransactions.remove(txnID);
+	  }
 	}
 
 	private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
@@ -379,9 +381,16 @@ public class TransactionManager {
     }
   }
   
+  private boolean checkIfCycleExists() {
+    boolean cycleExists = false;
+
+    return cycleExists;
+  }
+
   private void checkIfDeadlocked(String txnID, String olderTxnID) {
     Transaction txn1 = this.currentTransactions.get(txnID);
     Transaction txn2 = this.currentTransactions.get(olderTxnID);
+
     if(txn2.getTransactionsWhichCurrentTransactionWaitsFor().contains(txnID)
         && txn1.getTransactionsWhichCurrentTransactionWaitsFor().contains(olderTxnID)) {
       //deadlock
@@ -390,6 +399,28 @@ public class TransactionManager {
       } else {
         this.abort(txn1);
       }
+    } else if(txn2.getTransactionWaitingForCurrentTransaction() != null) {
+      if(!txn2.getTransactionWaitingForCurrentTransaction().equals(txnID)) {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        checkIfDeadlocked(txnID,waitingTxnID);
+        //waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+        //txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+      } else {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        if(!waitingTxnID.equals(txnID)) {
+          waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+          txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+        }
+      }
+    } else{
+      txn2.setTransactionWaitingForCurrentTransaction(txnID);
+      txn1.setBlocked(true);
+      blockedTransactions.put(txn1.getID(),txn1);
+      txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(txn2.getID());
     }
   }
 
@@ -549,14 +580,18 @@ public class TransactionManager {
 
 	private void failSite(int siteID) {
 		dmList.get(siteID).getSite().fail();
-		Set<String> transIDs = currentTransactions.keySet();
-        for (String eachTransID :transIDs ) {
+
+        ArrayList<String> transIDs = new ArrayList<String>(currentTransactions.keySet());
+        for(int i = 0; i < transIDs.size(); i++) {
+          String eachTransID = transIDs.get(i);
           Set<Integer> varIDs = currentTransactions.get(eachTransID).getCorrespondingVars();
           for (Integer eachVarID : varIDs ) {
-            if (dmList.get(siteID).getSite().hasVariable(eachVarID) 
+            if (dmList.get(siteID).getSite().hasVariable(eachVarID)
                 && dmList.get(siteID).getSite().isPreviouslyFailed()) {
-              abort(currentTransactions.get(eachTransID));
-              System.out.println("Transaction:"+eachTransID + " Aborted because wrote to an odd variable at site that previously failed and no duplicates were available. ");
+              if(currentTransactions.containsKey(eachTransID)) {
+                abort(currentTransactions.get(eachTransID));
+                System.out.println("Transaction:"+eachTransID + " Aborted because wrote to an odd variable at site that previously failed and no duplicates were available. ");
+              }
             }
           }
         }
@@ -629,6 +664,7 @@ public class TransactionManager {
 			}
 		}
         executeOrInformWaitingTransaction(txnID);
+        currentTransactions.remove(txnID);
 	}
 
 	public void dump() {
