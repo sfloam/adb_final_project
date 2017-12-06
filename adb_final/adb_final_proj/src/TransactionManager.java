@@ -163,8 +163,9 @@ public class TransactionManager {
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			int value = readTransaction(transactionInfo[0], varID);
-			if (value != -1 && value != -2) {
-				// TODO: What does a read do? I guess nothing since dump will show it's value?
+			if (value != -1 || value != -2) {
+			  System.out.println("Read value "+transactionInfo[0]+" value "+varID);
+			  // TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
 			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
 	            Operation newOperation =
@@ -605,11 +606,17 @@ public class TransactionManager {
 
     if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
       for (int i = 1; i <= 10; i++) {
-        if (!currentTransactions.get(txnID).isReadOnly() && dmList.get(i).getSite().hasVariable(varID) && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
-          if (getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
+        if (!currentTransactions.get(txnID).isReadOnly() 
+            && dmList.get(i).getSite().hasVariable(varID) 
+            && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
+          if((currentTransactions.get(txnID).getSiteAccessedByTransaction().size() == 0)) {
             dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
             var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
-            System.out.println("Varid:" + varID + " val " + var.getValue());
+            //System.out.println("Varid:" + varID + " val " + var.getValue());
+          } else if(getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
+            dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
+            var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+            //System.out.println("Varid:" + varID + " val " + var.getValue());
           }
         } else if (currentTransactions.get(txnID).isReadOnly()
             && dmList.get(i).getSite().getRODataTable(txnID) != null
@@ -620,6 +627,7 @@ public class TransactionManager {
         }
         else {
           continue;
+         
         }
       }
 
@@ -643,7 +651,7 @@ public class TransactionManager {
       return -2;
     }
   }
-  }
+  
 
 	private void failSite(int siteID) {
 		dmList.get(siteID).getSite().fail();
