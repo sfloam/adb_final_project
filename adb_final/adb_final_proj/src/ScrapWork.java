@@ -18,6 +18,38 @@ public class ScrapWork {
 	}
 	
 	private void RETROACTIVEWRONGendTransaction(String txnID) {
+	  
+	  
+
+	    // TODO: Identify what needs to happen during an abortion
+	    // TODO: If you need to revert a value back, you should use dm.getvars() because
+	    // its last commited and 2pl states nothing could have written to it
+	    // TODO: b/c its locked and vars is updated to last commmited
+//	  public void resolveDeadLock() {
+//	      boolean isDeadlocked = false;
+//	      Transaction youngestTransaction = null;
+//	      Integer youngestTransactionAge = -1;
+	//
+//	      Iterator<String> eachTransaction = blockedTransactions.keySet().iterator();
+//	      while (eachTransaction.hasNext()) {
+//	          String currTrans = eachTransaction.next();
+//	          if (blockedTransactions.get(currTrans).getAge() > youngestTransactionAge) {
+//	              youngestTransactionAge = blockedTransactions.get(currTrans).getAge();
+//	              youngestTransaction = blockedTransactions.get(currTrans);
+	//
+//	          }
+//	          if (!blockedTransactions.get(currTrans).isBlocked()) {
+//	              isDeadlocked = false;
+//	              System.out.println("NO DEADLOCK");
+//	          }
+//	      }
+	//
+//	      if (isDeadlocked) {
+//	          System.out.println("Recovered Site !");
+//	          abort(youngestTransaction);
+//	      }
+//	  }
+
 //      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
 //      Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
 //      for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
