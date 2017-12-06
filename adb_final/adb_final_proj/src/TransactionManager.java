@@ -25,35 +25,6 @@ import java.util.Set;
  * 
  */
 public class TransactionManager {
-  private LinkedList<Transaction> aborted;
-  private ArrayList<DataManager> dmList;
-  private int age;
-  private HashMap<Integer, Site> allSitesMap;
-  private HashMap<String, Transaction> currentTransactions;
-  private int time;
-  private HashMap<String, ArrayList<Operation>> transactionWaitList;
-  private HashMap<String, Transaction> blockedTransactions;
-
-  public TransactionManager() {
-    // TODO: May not need all of these
-    this.time = 0;
-    this.aborted = new LinkedList<Transaction>();
-    currentTransactions = new HashMap<String, Transaction>();
-    blockedTransactions = new HashMap<String, Transaction>();
-    transactionWaitList = new HashMap<String, ArrayList<Operation>>();
-    allSitesMap = new HashMap<Integer, Site>();
-    this.age = 0;
-    this.dmList = new ArrayList<DataManager>();
-    for (int i = 0; i < 11; i++) {
-      if (i == 0) {
-        dmList.add(null);
-      } else {
-        dmList.add(new DataManager(i));
-        allSitesMap.put(i, dmList.get(i).getSite());
-      }
-    }
-  }
-
   /**
    * assignTransaction
    * 
@@ -139,123 +110,154 @@ public class TransactionManager {
    *        <ul>
    *        </ul>
    */
-  public void assignTransaction(String operationLine) {
-    if (operationLine.startsWith("dump()")) {
-      dump();
-    } else if (operationLine.startsWith("dump(x")) {
-      int variableIndex = Integer.parseInt(operationLine.substring(6, operationLine.length() - 1));
-      dumpX(variableIndex);
-    } else if (operationLine.startsWith("dump(")) {
-      int siteIndex = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
-      dumpI(siteIndex);
-    } else if (operationLine.startsWith("begin(")) {
-      String transactionName = operationLine.substring(6, operationLine.length() - 1);
-      startTransaction(transactionName, GlobalConstants.readWriteBegin);
-      age++;
-    } else if (operationLine.startsWith("beginRO(")) {
-      String transactionName = operationLine.substring(8, operationLine.length() - 1);
-      startTransaction(transactionName, GlobalConstants.readOnlyBegin);
-      createROTablesForTransaction(transactionName);
-    } else if (operationLine.startsWith("R(")) {
-      String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
-      int varIDIndex = transactionInfo[1].indexOf("x") + 1;
-      int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-      int value = readTransaction(transactionInfo[0], varID);
-      if (value != -1 && value != -2) {
-        // TODO: What does a read do? I guess nothing since dump will show it's value?
-        System.out.println("A read for VarID" + varID + " would be " + value);
-      } else if (value == -1) {
-        makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
-        Operation newOperation = new Operation(time, GlobalConstants.readOperation, varID, value);
-        insertToWaitList(transactionInfo[0], newOperation);
-      } else {
-        abort(currentTransactions.get(transactionInfo[0]));
-      }
-    } else if (operationLine.startsWith("W(")) {
-      String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
-      int varIDIndex = transactionInfo[1].indexOf("x") + 1;
-      int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
-      int valueToBeWritten = Integer.parseInt(transactionInfo[2].trim());
-      // TODO: You need to save the operation
-      writeTransaction(transactionInfo[0], varID, valueToBeWritten);
-    } else if (operationLine.startsWith("end(")) {
-      String transactionName = operationLine.substring(4, operationLine.length() - 1);
-      endTransaction(transactionName);
-    } else if (operationLine.startsWith("fail(")) {
-      int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
-      failSite(siteID);
-    } else if (operationLine.startsWith("recover(")) {
-      int siteID = Integer.parseInt(operationLine.substring(8, operationLine.length() - 1));
-      recoverSite(siteID);
-    }
-  }
+  
 
-  private void startTransaction(String txnID, String transactionType) {
-    if (!currentTransactions.containsKey(txnID)) {
-      Transaction newTransaction = new Transaction(txnID, transactionType);
-      newTransaction.setAge(age);
-      currentTransactions.put(txnID, newTransaction);
-    }
-  }
+	private LinkedList<Transaction> aborted;
+	private ArrayList<DataManager> dmList;
+	private int age;
+	private HashMap<Integer, Site> allSitesMap;
+	private HashMap<String, Transaction> currentTransactions;
+	private int time;
+	private HashMap<String, ArrayList<Operation>> transactionWaitList;
+	private HashMap<String, Transaction> blockedTransactions;
 
-  private void createROTablesForTransaction(String transactionName) {
-    for (int i = 1; i < dmList.size(); i++) {
-      if (dmList.get(i).getSite() != null) {
-        dmList.get(i).getSite().setRODataTable(transactionName);
-      } else {
-        System.out.println("Site Down. Called from createROTablesForTransaction!");
-      }
-    }
-  }
+	public TransactionManager() {
+		// TODO: May not need all of these
+		this.time = 0;
+		this.aborted = new LinkedList<Transaction>();
+		currentTransactions = new HashMap<String, Transaction>();
+		blockedTransactions = new HashMap<String, Transaction>();
+		transactionWaitList = new HashMap<String, ArrayList<Operation>>();
+		allSitesMap = new HashMap<Integer, Site>();
+		this.age = 0;
+		this.dmList = new ArrayList<DataManager>();
+		for (int i = 0; i < 11; i++) {
+			if (i == 0) {
+				dmList.add(null);
+			} else {
+				dmList.add(new DataManager(i));
+				allSitesMap.put(i, dmList.get(i).getSite());
+			}
+		}
+	}
 
-  // TODO find out what is going on with writes and why not copying
-  private void endTransaction(String txnID) {
+	public void assignTransaction(String operationLine) {
+		if (operationLine.startsWith("dump()")) {
+			dump();
+		}  else if (operationLine.startsWith("dump(x")) {
+            int variableIndex = Integer.parseInt(operationLine.substring(6, operationLine.length() - 1));
+            dumpX(variableIndex);
+		} else if (operationLine.startsWith("dump(")) {
+            int siteIndex = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+            dumpI(siteIndex);
+		} else if (operationLine.startsWith("begin(")) {
+			String transactionName = operationLine.substring(6, operationLine.length() - 1);
+			startTransaction(transactionName, GlobalConstants.readWriteBegin);
+			age++;
+		} else if (operationLine.startsWith("beginRO(")) {
+			String transactionName = operationLine.substring(8, operationLine.length() - 1);
+			startTransaction(transactionName, GlobalConstants.readOnlyBegin);
+			createROTablesForTransaction(transactionName);
+		} else if (operationLine.startsWith("R(")) {
+			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
+			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
+			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
+			int value = readTransaction(transactionInfo[0], varID);
+			if (value != -1 && value != -2) {
+				// TODO: What does a read do? I guess nothing since dump will show it's value?
+			} else if (value == -1) {
+			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
+	            Operation newOperation =
+	                new Operation(time, GlobalConstants.readOperation, varID, value);
+	            insertToWaitList(transactionInfo[0], newOperation);
+			} else {
+				abort(currentTransactions.get(transactionInfo[0]));
+			}
+		} else if (operationLine.startsWith("W(")) {
+			String[] transactionInfo = operationLine.substring(2, operationLine.length() - 1).split(",");
+			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
+			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
+			int valueToBeWritten = Integer.parseInt(transactionInfo[2].trim());
+			// TODO: You need to save the operation
+			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
+		} else if (operationLine.startsWith("end(")) {
+			String transactionName = operationLine.substring(4, operationLine.length() - 1);
+			endTransaction(transactionName);
+		} else if (operationLine.startsWith("fail(")) {
+			int siteID = Integer.parseInt(operationLine.substring(5, operationLine.length() - 1));
+			failSite(siteID);
+		} else if (operationLine.startsWith("recover(")) {
+			int siteID = Integer.parseInt(operationLine.substring(8, operationLine.length() - 1));
+			recoverSite(siteID);
+		}
+	}
 
-    Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
-    Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
-    for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
-      int numberOfSitesAvaialbe = 0;
-      int nextVar = ctIntArr[ctIndex];
-      for (int dmIndex = 1; dmIndex < dmList.size(); dmIndex++) {
-        if (dmList.get(dmIndex).getSite().getDataTable().getDT() != null
-            && dmList.get(dmIndex).getSite().getDataTable().getDT().containsKey(nextVar)) {
+	private void startTransaction(String txnID, String transactionType) {
+		if (!currentTransactions.containsKey(txnID)) {
+			Transaction newTransaction = new Transaction(txnID, transactionType);
+			newTransaction.setAge(age);
+			currentTransactions.put(txnID, newTransaction);
+		}
+	}
+	
+	private void createROTablesForTransaction(String transactionName) {
+		for (int i = 1; i < dmList.size(); i++) {
+			if(dmList.get(i).getSite()!= null){
+				dmList.get(i).getSite().setRODataTable(transactionName);
+			} else {
+				System.out.println("Site Down. Called from createROTablesForTransaction!");
+			}
+		}
+	}
 
-          numberOfSitesAvaialbe++;
+	// TODO find out what is going on with writes and why not copying
+	private void endTransaction(String txnID) {
+	  if(currentTransactions.containsKey(txnID)) {
+	      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
+	      Integer[] ctIntArr = ctSet.toArray(new Integer[ctSet.size()]);
+	      for (int ctIndex = 0; ctIndex < ctIntArr.length; ctIndex++) {
+	        int numberOfSitesAvaialbe = 0;
+	        int nextVar = ctIntArr[ctIndex];
+	        for (int dmIndex = 1; dmIndex < dmList.size(); dmIndex++) {
+	          if (dmList.get(dmIndex).getSite().getDataTable().getDT() != null 
+	              && dmList.get(dmIndex).getSite().getDataTable().getDT().containsKey(nextVar)) {
 
-          // update variable value in site DT
-          dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).setValue(dmList
-              .get(dmIndex).getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
+	            numberOfSitesAvaialbe++;
 
-          // remove all txn locks
-          dmList.get(dmIndex).getSite().getLT().removeLockOnTransactionID(txnID);
-        }
-      }
-      if (numberOfSitesAvaialbe == 0) {
-        System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
-        abort(currentTransactions.get(txnID));
-        break;
-      }
-    }
-    executeOrInformWaitingTransaction(txnID);
-    currentTransactions.remove(txnID);
-  }
+	            // update variable value in site DT
+	            dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar)
+	              .setValue(dmList.get(dmIndex).getSite().getDataTable().getDT().get(nextVar).getIntermediateValue());
 
-  private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
-    ArrayList<Site> sitesHavingVariable = new ArrayList<Site>();
-    for (int i = 1; i <= GlobalConstants.sites; i++) {
-      Site currentSite = allSitesMap.get(i);
-      if (currentSite.isUp()) {
-        HashMap<Integer, Variable> varOnSite = currentSite.getDataTable().getDT();
-        if (varOnSite.containsKey(varID)) {
-          sitesHavingVariable.add(currentSite);
-        }
-      }
-    }
-    return sitesHavingVariable;
-  }
+	            // remove all txn locks
+	            dmList.get(dmIndex).getSite().getLT().removeLockOnTransactionID(txnID);
+	          }
+	        }
+	        if (numberOfSitesAvaialbe == 0) {
+	          System.out.println("FAILURE HAPPENED- NO AVAILABLE SITES WHEN TRYING TO COMMIT");
+	          abort(currentTransactions.get(txnID));
+	          break;
+	        }
+	      }
+	        executeOrInformWaitingTransaction(txnID);
+	        currentTransactions.remove(txnID);
+	  }
+	}
 
-  private String checkIfOlderTransactionHasLockOnVariable(int transactionAge, int varID,
-      String currentTxnID) {
+	private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
+		ArrayList<Site> sitesHavingVariable = new ArrayList<Site>();
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
+			Site currentSite = allSitesMap.get(i);
+			if (currentSite.isUp()) {
+				HashMap<Integer, Variable> varOnSite = currentSite.getDataTable().getDT();
+				if (varOnSite.containsKey(varID)) {
+					sitesHavingVariable.add(currentSite);
+				}
+			}
+		}
+		return sitesHavingVariable;
+	}
+
+  private String checkIfOlderTransactionHasLockOnVariable(int transactionAge, int varID, String currentTxnID) {
     for (int i = 1; i <= GlobalConstants.sites; i++) {
       Site currentSite = allSitesMap.get(i);
       ArrayList<LockObj> locksOnVariable = currentSite.getLT().getAllLocksForVariable(varID);
@@ -388,11 +390,17 @@ public class TransactionManager {
       }
     }
   }
+  
+  private boolean checkIfCycleExists() {
+    boolean cycleExists = false;
 
+    return cycleExists;
+  }
+    
   private void checkIfDeadlocked(String txnID, String olderTxnID) {
     Transaction txn1 = this.currentTransactions.get(txnID);
     Transaction txn2 = this.currentTransactions.get(olderTxnID);
-    if (txn2.getTransactionsWhichCurrentTransactionWaitsFor().contains(txnID)
+    if(txn2.getTransactionsWhichCurrentTransactionWaitsFor().contains(txnID)
         && txn1.getTransactionsWhichCurrentTransactionWaitsFor().contains(olderTxnID)) {
       // deadlock
       if (txn1.getAge() < txn2.getAge()) {
@@ -401,6 +409,28 @@ public class TransactionManager {
         System.out.println("Abort because of deadlock");
         this.abort(txn1);
       }
+    } else if(txn2.getTransactionWaitingForCurrentTransaction() != null) {
+      if(!txn2.getTransactionWaitingForCurrentTransaction().equals(txnID)) {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        checkIfDeadlocked(txnID,waitingTxnID);
+        //waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+        //txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+      } else {
+        Transaction waitingTransaction = this.currentTransactions
+            .get(txn2.getTransactionWaitingForCurrentTransaction());
+        String waitingTxnID = waitingTransaction.getID();
+        if(!waitingTxnID.equals(txnID)) {
+          waitingTransaction.setTransactionWaitingForCurrentTransaction(txnID);
+          txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(waitingTxnID);
+        }
+      }
+    } else{
+      txn2.setTransactionWaitingForCurrentTransaction(txnID);
+      txn1.setBlocked(true);
+      blockedTransactions.put(txn1.getID(),txn1);
+      txn1.getTransactionsWhichCurrentTransactionWaitsFor().add(txn2.getID());
     }
   }
 
@@ -579,93 +609,126 @@ public class TransactionManager {
       return -2;
     }
   }
-
-  private void failSite(int siteID) {
-    dmList.get(siteID).getSite().fail();
-    Set<String> transIDs = currentTransactions.keySet();
-    for (String eachTransID : transIDs) {
-      Set<Integer> varIDs = currentTransactions.get(eachTransID).getCorrespondingVars();
-      for (Integer eachVarID : varIDs) {
-        if (dmList.get(siteID).getSite().hasVariable(eachVarID)
-            && dmList.get(siteID).getSite().isPreviouslyFailed()) {
-          abort(currentTransactions.get(eachTransID));
-          System.out.println("Transaction:" + eachTransID
-              + " Aborted because wrote to an odd variable at site that previously failed and no duplicates were available. ");
-        }
-      }
-    }
   }
 
-  private void recoverSite(int siteID) {
-    dmList.get(siteID).getSite().recover();
-  }
+	private void failSite(int siteID) {
+		dmList.get(siteID).getSite().fail();
 
-  // TODO : Fix Abort functionaltiy
-  public void abort(Transaction youngestTransaction) {
-    System.out.println("Aborted Trxn: " + youngestTransaction);
-    // add to list of aborted txns
-    aborted.add(youngestTransaction);
-    // get txnID of aborted txn
-    String txnID = youngestTransaction.getID();
-    // remove all locks held by txn
-    for (DataManager eachDM : dmList) {
-      if (eachDM == null) {
-        continue;
-      } else {
-        eachDM.getSite().getLT().removeLockOnTransactionID(txnID);
-      }
-    }
-    // iterate all the variables touched by a trxn to set intermediate to init value
-    Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
-    while (correspondingVarIDs.hasNext()) {
-      int varID = correspondingVarIDs.next();
-      Iterator<DataManager> eachDM = dmList.iterator();
-      while (eachDM.hasNext()) {
-        DataManager dm = eachDM.next();
-        if (dm == null) {
-          continue;
-        } else {
-          Site site = dm.getSite();
-          // Restore to intialized value
-          if (site.hasVariable(varID)) {
-            site.getDataTable().getDT().get(varID).setIntermediateValue(varID * 10);
+        ArrayList<String> transIDs = new ArrayList<String>(currentTransactions.keySet());
+        for(int i = 0; i < transIDs.size(); i++) {
+          String eachTransID = transIDs.get(i);
+          Set<Integer> varIDs = currentTransactions.get(eachTransID).getCorrespondingVars();
+          for (Integer eachVarID : varIDs ) {
+            if (dmList.get(siteID).getSite().hasVariable(eachVarID)
+                && dmList.get(siteID).getSite().isPreviouslyFailed()) {
+              if(currentTransactions.containsKey(eachTransID)) {
+                abort(currentTransactions.get(eachTransID));
+                System.out.println("Transaction:"+eachTransID + " Aborted because wrote to an odd variable at site that previously failed and no duplicates were available. ");
+              }
+            }
           }
         }
-      }
-    }
-    executeOrInformWaitingTransaction(txnID);
-  }
+	}
 
-  public void dump() {
-    for (int i = 1; i <= GlobalConstants.sites; i++) {
-      // System.out.println(i);
-      System.out.print(allSitesMap.get(i).toString());
-    }
-    System.out.print("\n");
-  }
+	private void recoverSite(int siteID) {
+		dmList.get(siteID).getSite().recover();
+	}
 
-  public void dumpI(int siteIndex) {
-    // Do we need null checks?
-    if (allSitesMap.containsKey(siteIndex)) {
-      System.out.print(allSitesMap.get(siteIndex).toString());
-    }
-    // Should we throw exception if site index is invalid?
-    System.out.print("\n");
-  }
+	// TODO: Identify what needs to happen during an abortion
+	// TODO: If you need to revert a value back, you should use dm.getvars() because
+	// its last commited and 2pl states nothing could have written to it
+	// TODO: b/c its locked and vars is updated to last commmited
+	public void resolveDeadLock() {
+		boolean isDeadlocked = false;
+		Transaction youngestTransaction = null;
+		Integer youngestTransactionAge = -1;
 
-  // Fixed DumpX--> was not printing correctly
-  public void dumpX(int variableID) {
-    for (int i = 1; i <= GlobalConstants.sites; i++) {
-      ArrayList<Variable> siteVariables = allSitesMap.get(i).getVariablesOnSite();
-      for (Variable eachSiteVariable : siteVariables) {
-        if (eachSiteVariable.getID() == variableID) {
-          System.out.print("Site ID: " + i + "\n");
-          System.out
-              .print(" - " + eachSiteVariable.getID() + " = " + eachSiteVariable.getValue() + "\n");
-        }
-      }
-    }
-    System.out.print("\n");
-  }
+		Iterator<String> eachTransaction = blockedTransactions.keySet().iterator();
+		while (eachTransaction.hasNext()) {
+			String currTrans = eachTransaction.next();
+			if (blockedTransactions.get(currTrans).getAge() > youngestTransactionAge) {
+				youngestTransactionAge = blockedTransactions.get(currTrans).getAge();
+				youngestTransaction = blockedTransactions.get(currTrans);
+
+			}
+			if (!blockedTransactions.get(currTrans).isBlocked()) {
+				isDeadlocked = false;
+				System.out.println("NO DEADLOCK");
+			}
+		}
+
+		if (isDeadlocked) {
+			System.out.println("DEADLOCK!");
+			abort(youngestTransaction);
+		}
+	}
+
+	// TODO : Fix Abort functionaltiy
+	public void abort(Transaction youngestTransaction) {
+		System.out.println("Aborted Trxn: " + youngestTransaction);
+		// add to list of aborted txns
+		aborted.add(youngestTransaction);
+		// get txnID of aborted txn
+		String txnID = youngestTransaction.getID();
+		// remove all locks held by txn
+		for (DataManager eachDM : dmList) {
+			if (eachDM == null) {
+				continue;
+			} else {
+				eachDM.getSite().getLT().removeLockOnTransactionID(txnID);
+			}
+		}
+		// iterate all the variables touched by a trxn to set intermediate to init value
+		Iterator<Integer> correspondingVarIDs = youngestTransaction.getCorrespondingVars().iterator();
+		while (correspondingVarIDs.hasNext()) {
+			int varID = correspondingVarIDs.next();
+			Iterator<DataManager> eachDM = dmList.iterator();
+			while (eachDM.hasNext()) {
+				DataManager dm = eachDM.next();
+				if (dm == null) {
+					continue;
+				} else {
+					Site site = dm.getSite();
+					// Restore to intialized value
+					if(site.hasVariable(varID)) {
+		                 site.getDataTable().getDT().get(varID).setIntermediateValue(varID * 10);
+					}
+				}
+			}
+		}
+        executeOrInformWaitingTransaction(txnID);
+        currentTransactions.remove(txnID);
+	}
+
+	public void dump() {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
+			// System.out.println(i);
+			System.out.print(allSitesMap.get(i).toString());
+		}
+		System.out.print("\n");
+	}
+
+	public void dumpI(int siteIndex) {
+		// Do we need null checks?
+		if (allSitesMap.containsKey(siteIndex)) {
+			System.out.print(allSitesMap.get(siteIndex).toString());
+		}
+		// Should we throw exception if site index is invalid?
+		System.out.print("\n");
+	}
+
+	//Fixed DumpX--> was not printing correctly
+	public void dumpX(int variableID) {
+		for (int i = 1; i <= GlobalConstants.sites; i++) {
+			ArrayList<Variable> siteVariables = allSitesMap.get(i).getVariablesOnSite();
+			for (Variable eachSiteVariable : siteVariables) {
+				if (eachSiteVariable.getID() == variableID) {
+					System.out.print("Site ID: " + i + "\n");
+					System.out.print(" - " + eachSiteVariable.getID() + " = " +eachSiteVariable.getValue() + "\n");
+				}
+			}
+		}
+		System.out.print("\n");
+	}
 
 }
