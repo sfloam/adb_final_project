@@ -147,9 +147,10 @@ public class Site {
     this.isUp = isUp;
   }
 
-  public void initiateWriteToVariables(int varID, int value) {
+  public void initiateWriteToVariables(int varID, int value, String txnID) {
     Variable currentVariable = dataTable.getDT().get(varID);
     currentVariable.setIntermediateValue(value);
+    currentVariable.setIntermediateValueSetBy(txnID);
     this.dataTable.updateIntermediateValue(varID, value);
   }
   
