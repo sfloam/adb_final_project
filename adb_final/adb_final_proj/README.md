@@ -1,6 +1,35 @@
 # adb_final_project
 Advanced Database Systems Final Project
 
+# adb_final_project
+Advanced Database Systems Final Project
+
+This project will demonstrate distributed replicated concurrency control and recovery. This project creates a light-weight, distributed database, with multiversion read consistency, deadlock detection, replication, failure, and recovery. 
+
+Our system executes transactions using strict two phase locking (using read and write locks) at each site and validation at commit time. A transaction may read a variable and later write that same variable as well as others. Since this site uses replication, we implement the available copies algorithm which allows writes and commits to just the available sites. For example, if Site 1 is down, its last committed value of 123 may be different from Site 2, which is up and has a value of 573.
+
+Our system detects deadlock using a cycle detection mechanism which checks which transactions are waiting on other transactions and aborts the youngest transaction in the cycle. A cycle is determined when at least one transaction, T1, holds a lock on a variable, x1, that transaction, T2, needs and transaction, T2, holds a variable, x2, that transaction, T1, needs. Since both are waiting on each other, none can proceed until one releases its resources. In our system, we abort the youngest transaction involved in the deadlock. Since this system executes instructions line by line, no two transactions can have the same age. The system assumes that users will not restart an aborted transaction for simplicity reasons. Also, we do not test deadlock at every tick since it only affects actions where locking are affected.
+
+Our application currently supports 10 Site locations (1-10) each with 10 DataManagers. All sites hold variables x2, x4, x6, x8, x10, x12, x14, x16, x18, x20. Odd variables (x1, x3, x5, x7, x9, x11, x13, x15, x17, x19) are not replicated, and are found only at a site location equivalent to ((1 + index) mod 10).
+
+Our project made use of Object Oriented Programming to represent the various components of our distributed replicated concurrency control and recovery application. The following describes the setup: 
+
+
+The DataManager class creates a Site for data replication. The initialization of sites with variables is conducted in the Site class during the Site's instantiation.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 **Data Requirements**
 - [x] Create 20 distinct variables x1, ..., x20 (the numbers between 1 and 20 will be referred to as indexes below)
 - [x] Create 10 sites numbered 1 to 10. A copy is indicated by a dot. Thus, x6.2 is the copy of variable x6 at site 2. 
