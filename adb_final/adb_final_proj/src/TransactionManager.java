@@ -279,7 +279,9 @@ public class TransactionManager {
     for (int i = 1; i <= GlobalConstants.sites; i++) {
       ArrayList<LockObj> locksAtSite = allSitesMap.get(i).getLT().getAllLocksForVariable(varID);
       for (LockObj eachLock : locksAtSite) {
-        allLocks.add(eachLock);
+        if(eachLock.getLockType().equals(GlobalConstants.writeLock)) {
+          allLocks.add(eachLock);
+        }
       }
     }
     return allLocks;
@@ -315,7 +317,7 @@ public class TransactionManager {
       Site currentSite = allSitesMap.get(i);
       if (currentSite.hasVariable(varID) && currentSite.isUp()
           && currentSite.getLT().isLockWithTransactionIDPresent(txnID)) {
-        currentSite.initiateWriteToVariables(varID, value);
+        currentSite.initiateWriteToVariables(varID, value,txnID);
         ArrayList<Integer> activeSites = getSitesAccessedByTransaction(varID);
         currentTransactions.get(txnID).setSiteAccessedByTransaction(activeSites);
       }
@@ -604,37 +606,51 @@ public class TransactionManager {
     if(currentTransactions.get(txnID) != null) {
       currentTransactions.get(txnID).addToCorrespondingVars(varID);
       Variable var = null;
+      boolean allSitesHavingVarDown = true;
 
       if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
         for (int i = 1; i <= 10; i++) {
-          if (!currentTransactions.get(txnID).isReadOnly()
-              && dmList.get(i).getSite().hasVariable(varID)
-              && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
-            if((currentTransactions.get(txnID).getSiteAccessedByTransaction().size() == 0)) {
-              dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
-              var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
-              //System.out.println("Varid:" + varID + " val " + var.getValue());
-            } else {
-              if(getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
+          if(dmList.get(i).getSite().isUp()) {
+            if (!currentTransactions.get(txnID).isReadOnly()
+                && dmList.get(i).getSite().hasVariable(varID)
+                && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
+              if((currentTransactions.get(txnID).getSiteAccessedByTransaction().size() == 0)) {
                 dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
                 var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
                 //System.out.println("Varid:" + varID + " val " + var.getValue());
               } else {
-                if(currentTransactions.get(txnID).getSiteAccessedByTransaction().contains(i)) {
+                if(getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
                   dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
                   var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+                  //System.out.println("Varid:" + varID + " val " + var.getValue());
+                } else {
+                  if(currentTransactions.get(txnID).getSiteAccessedByTransaction().contains(i)) {
+                    dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
+                    var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+                  }
                 }
               }
+            } else if (currentTransactions.get(txnID).isReadOnly()
+                && dmList.get(i).getSite().getRODataTable(txnID) != null
+                && dmList.get(i).getSite().getRODataTable(txnID).containsKey(varID)) {
+              /*System.out.println("Varid:" + varID + " val "
+                  + dmList.get(i).getSite().getRODataTable(txnID).get(varID).getValue());*/
+              System.out.println("Transaction "+txnID+" read variable "+varID+" with value "+dmList.get(i).getSite().getRODataTable(txnID).get(varID));
+              return dmList.get(i).getSite().getRODataTable(txnID).get(varID);
+            }  else {
+              continue;
             }
-          } else if (currentTransactions.get(txnID).isReadOnly()
-              && dmList.get(i).getSite().getRODataTable(txnID) != null
-              && dmList.get(i).getSite().getRODataTable(txnID).containsKey(varID)) {
-            /*System.out.println("Varid:" + varID + " val "
-                + dmList.get(i).getSite().getRODataTable(txnID).get(varID).getValue());*/
-            return dmList.get(i).getSite().getRODataTable(txnID).get(varID);
-          }  else {
-            continue;
           }
+        }
+
+        for(int i = 1; i <= 10; i++) {
+          if(dmList.get(i).getSite().isUp() && dmList.get(i).getSite().hasVariable(varID)) {
+            allSitesHavingVarDown = false;
+          }
+        }
+
+        if(allSitesHavingVarDown) {
+          return -2;
         }
 
         if (var == null) {
@@ -742,7 +758,11 @@ public class TransactionManager {
 					Site site = dm.getSite();
 					// Restore to intialized value
 					if(site.hasVariable(varID)) {
-		                 site.getDataTable().getDT().get(varID).setIntermediateValue(varID * 10);
+					     if(site.getDataTable().getDT().get(varID).getIntermediateValueSetBy() != null) {
+	                         if(site.getDataTable().getDT().get(varID).getIntermediateValueSetBy().equals(txnID)) {
+	                             site.getDataTable().getDT().get(varID).setIntermediateValue(varID * 10);
+	                         }
+					     }
 					}
 				}
 			}
