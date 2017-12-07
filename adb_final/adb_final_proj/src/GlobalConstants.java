@@ -1,4 +1,9 @@
-
+/**
+ * <h1>Global Constants</h1>
+ * <span>Stores commonly used constant values</span>
+ * @author pratikkarnik and scottfloam
+ *
+ */
 public class GlobalConstants {
 
   public final static int sites = 10;
