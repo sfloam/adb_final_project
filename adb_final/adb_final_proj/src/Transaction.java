@@ -10,12 +10,13 @@ import java.util.Set;
  * 
  * @author scottfloam and pratikkarnik
  * 
- *         <h1>Transaction</h1> The Transaction keeps track of the transaction details. It holds
+ *         <h1>Transaction</h1>
+ *         <span> The Transaction keeps track of the transaction details. It holds
  *         information such as whether it is blocked, how long it has been running, the id of the
  *         transaction, and the variables corresponding to that Transaction. In addition, it also
  *         keeps a log of its operations in the operations queue. We need to think about if we want
  *         this to be a stack instead. It may make more sense to pop out most recent transactions to
- *         revert actions. TBD.
+ *         revert actions.</span>
  *
  */
 public class Transaction {
@@ -134,9 +135,9 @@ public class Transaction {
    */
   public String toString() {
 
-    String output = "transName: " + this.txnID + "\n" + " Age: " + age + "\n"
-        + " correspondingVars: " + correspondingVars + "\n" + " blocked: " + blocked + "\n"
-        + " operations: " + operations + "\n";
+    String output = "\n TransactionID: " + this.txnID + "\n" + " Age: " + age + "\n"
+        + " CorrespondingVars: " + correspondingVars + "\n" + " Blocked: " + blocked + "\n"
+        + " Operations: " + operations + "\n";
 
 
 
