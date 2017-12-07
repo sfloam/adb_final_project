@@ -134,12 +134,9 @@ public class Transaction {
    */
   public String toString() {
 
-    String output = "transName: " + this.txnID + "\n" + " Age: " + age + "\n"
-        + " correspondingVars: " + correspondingVars + "\n" + " blocked: " + blocked + "\n"
-        + " operations: " + operations + "\n";
-
-
-
+    String output = "\n TransactionID: " + this.txnID + "\n" + " Age: " + age + "\n"
+                + " CorrespondingVars: " + correspondingVars + "\n" + " Blocked: " + blocked + "\n"
+                + " Operations: " + operations + "\n";
     return output;
   }
 

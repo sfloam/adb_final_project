@@ -7,6 +7,7 @@ public class Variable {
   private int intermediateValue;
   private boolean isFreeToRead;
   private boolean isExclusiveToSite;
+  private String intermediateValueSetBy;
 
   // whether it is locked by a transaction
   private boolean lock;
@@ -112,6 +113,14 @@ public class Variable {
 
   public void setExclusiveToSite(boolean isExclusiveToSite) {
     this.isExclusiveToSite = isExclusiveToSite;
+  }
+
+  public String getIntermediateValueSetBy() {
+    return intermediateValueSetBy;
+  }
+
+  public void setIntermediateValueSetBy(String intermediateValueSetBy) {
+    this.intermediateValueSetBy = intermediateValueSetBy;
   }
 
 }
