@@ -2,23 +2,16 @@
  * 
  * @author pratikkarnik and scottfloam
  * 
- *         <h1>Data Manager</h1> The DataManager class creates 1 sites for data replication. The
- *         initialization of sites with variables is conducted in the Site class during the Site's
- *         instantiation.
+ *         <h1>Data Manager</h1> 
+ *         <span>The DataManager class creates one Site for data replication. </span> 
+ *         <span>The initialization of variables at a Site is conducted in the </span> 
+ *         <span>Site class during the Site's instantiation.</span>
  * 
  */
 public class DataManager {
 
   /**
-   * <strong>site:</strong> used to hold a site
-   * 
-   * <ul>
-   * <li>Potential Purposes:</li>
-   * <ul>
-   * <li>Access a site</li>
-   * </ul>
-   * </ul>
-   * 
+   * <strong>site:</strong> used to hold a {@link Site}.
    */
   private Site site;
 
@@ -27,20 +20,19 @@ public class DataManager {
   }
 
   /**
-   * @return site
+   * @return the {@link Site} associated with this {@link DataManager}
    */
   public Site getSite() {
     return this.site;
   }
 
   /**
-   * @return Returns the list of variables in the vars list. Subject to change.
+   * @return Returns a {@link Site} with the {@link Site} information.
    */
   public String toString() {
     String res = "";
     res += "SiteID:" + site.getID() + " " + this.site;
     return res;
-    // TODO: make to string output dump for site
   }
 
 }
