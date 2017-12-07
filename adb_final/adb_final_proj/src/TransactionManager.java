@@ -163,15 +163,15 @@ public class TransactionManager {
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			int value = readTransaction(transactionInfo[0], varID);
-			if (value != -1 || value != -2) {
-			  System.out.println("Read value "+transactionInfo[0]+" value "+varID);
+			if (value != -1 && value != -2 && value != -3) {
+			  //System.out.println("Transaction "+transactionInfo[0]+" read variable "+varID+" with value "+value);
 			  // TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
 			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
 	            Operation newOperation =
 	                new Operation(time, GlobalConstants.readOperation, varID, value);
 	            insertToWaitList(transactionInfo[0], newOperation);
-			} else {
+			} else if(value == -2){
 				abort(currentTransactions.get(transactionInfo[0]));
 			}
 		} else if (operationLine.startsWith("W(")) {
@@ -601,54 +601,63 @@ public class TransactionManager {
    * @return value that was read or -1 if no read can happen )
    */
   private int readTransaction(String txnID, int varID) {
-    currentTransactions.get(txnID).addToCorrespondingVars(varID);
-    Variable var = null;
+    if(currentTransactions.get(txnID) != null) {
+      currentTransactions.get(txnID).addToCorrespondingVars(varID);
+      Variable var = null;
 
-    if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
-      for (int i = 1; i <= 10; i++) {
-        if (!currentTransactions.get(txnID).isReadOnly() 
-            && dmList.get(i).getSite().hasVariable(varID) 
-            && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
-          if((currentTransactions.get(txnID).getSiteAccessedByTransaction().size() == 0)) {
-            dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
-            var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
-            //System.out.println("Varid:" + varID + " val " + var.getValue());
-          } else if(getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
-            dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
-            var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
-            //System.out.println("Varid:" + varID + " val " + var.getValue());
+      if (currentTransactions.containsKey(txnID) && !currentTransactions.get(txnID).isBlocked()) {
+        for (int i = 1; i <= 10; i++) {
+          if (!currentTransactions.get(txnID).isReadOnly()
+              && dmList.get(i).getSite().hasVariable(varID)
+              && dmList.get(i).getSite().getLT().isReadLockPossible(txnID, varID)) {
+            if((currentTransactions.get(txnID).getSiteAccessedByTransaction().size() == 0)) {
+              dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
+              var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+              //System.out.println("Varid:" + varID + " val " + var.getValue());
+            } else {
+              if(getActiveSitesHavingVariable(varID).size() <= currentTransactions.get(txnID).getSiteAccessedByTransaction().size()) {
+                dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
+                var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+                //System.out.println("Varid:" + varID + " val " + var.getValue());
+              } else {
+                if(currentTransactions.get(txnID).getSiteAccessedByTransaction().contains(i)) {
+                  dmList.get(i).getSite().getLT().obtainReadLock(txnID, varID);
+                  var = dmList.get(i).getSite().getDataTable().getDT().get(varID);
+                }
+              }
+            }
+          } else if (currentTransactions.get(txnID).isReadOnly()
+              && dmList.get(i).getSite().getRODataTable(txnID) != null
+              && dmList.get(i).getSite().getRODataTable(txnID).containsKey(varID)) {
+            /*System.out.println("Varid:" + varID + " val "
+                + dmList.get(i).getSite().getRODataTable(txnID).get(varID).getValue());*/
+            return dmList.get(i).getSite().getRODataTable(txnID).get(varID);
+          }  else {
+            continue;
           }
-        } else if (currentTransactions.get(txnID).isReadOnly()
-            && dmList.get(i).getSite().getRODataTable(txnID) != null
-            && dmList.get(i).getSite().getRODataTable(txnID).containsKey(varID)) {
-          System.out.println("Varid:" + varID + " val "
-              + dmList.get(i).getSite().getRODataTable(txnID).get(varID).getValue());
-          return dmList.get(i).getSite().getRODataTable(txnID).get(varID).getValue();
         }
-        else {
-          continue;
-         
-        }
-      }
 
-      if (var == null) {
-        //no variable found
-        return -1;
+        if (var == null) {
+          //no variable found
+          return -1;
+        } else {
+          System.out.println("Transaction "+txnID+" read variable "+varID+" with value "+var.getValue());
+          return var.getValue();
+        }
       } else {
-        System.out.println("Varid:" + varID + " val " + var.getValue());
-        return var.getValue();
+
+        Operation op = new Operation(time, "R", varID);
+        time++;
+        currentTransactions.get(txnID).operations.add(op);
+        // needed for deadlock
+        currentTransactions.get(txnID).setBlocked(true);
+        blockedTransactions.put(currentTransactions.get(txnID).getID(),
+            currentTransactions.get(txnID));
+
+        return -2;
       }
     } else {
-
-      Operation op = new Operation(time, "R", varID);
-      time++;
-      currentTransactions.get(txnID).operations.add(op);
-      // needed for deadlock
-      currentTransactions.get(txnID).setBlocked(true);
-      blockedTransactions.put(currentTransactions.get(txnID).getID(),
-          currentTransactions.get(txnID));
-
-      return -2;
+      return -3;
     }
   }
   
