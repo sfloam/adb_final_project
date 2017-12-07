@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -26,6 +27,7 @@ public class Transaction {
   private ArrayList<LockObj> locksHeldByTransaction;
   private String transactionWaitingForCurrentTransaction;
   private Set<String> transactionsWhichCurrentTransactionWaitsFor;
+  private ArrayList<Integer> sitesAccessedByTransaction;
   private boolean readOnly;
   // used for rollbacks
   public Queue<Operation> operations;
@@ -39,6 +41,7 @@ public class Transaction {
     this.locksHeldByTransaction = new ArrayList<LockObj>();
     this.transactionsWhichCurrentTransactionWaitsFor = new HashSet<String>();
     this.readOnly = txnType.equals("RO");
+    this.sitesAccessedByTransaction = new ArrayList<Integer>();
   }
 
   /**
@@ -201,6 +204,18 @@ public class Transaction {
       }
     }
     return allLocksForVariable;
+  }
+  
+  public void setSiteAccessedByTransaction(ArrayList<Integer>siteAccessedByTransaction) {
+    for(int i = 0; i < siteAccessedByTransaction.size(); i++) {
+      if (!this.sitesAccessedByTransaction.contains(siteAccessedByTransaction.get(i))) {
+        this.sitesAccessedByTransaction.add(siteAccessedByTransaction.get(i));
+      }
+    }
+  }
+  
+  public ArrayList<Integer> getSiteAccessedByTransaction() {
+    return this.sitesAccessedByTransaction;
   }
   
   public boolean isReadOnly() {

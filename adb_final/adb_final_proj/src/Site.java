@@ -15,7 +15,8 @@ public class Site {
   private int id;
   private LockTable lt;
   private DataTable dataTable;
-  private HashMap<String,HashMap<Integer,Variable>> RODataTable;
+  //private HashMap<String,HashMap<Integer,Variable>> RODataTable;
+  private HashMap<String,HashMap<Integer,Integer>> RODataTable;
   private boolean isUp;
   private boolean previouslyFailed;
 
@@ -23,7 +24,7 @@ public class Site {
     this.id = id;
     this.lt = new LockTable();
     this.dataTable = new DataTable(id);
-    this.RODataTable = new HashMap<String,HashMap<Integer,Variable>>();
+    this.RODataTable = new HashMap<String,HashMap<Integer,Integer>>();
     this.isUp = true;
     this.previouslyFailed = false;
     
@@ -152,13 +153,16 @@ public class Site {
     this.dataTable.updateIntermediateValue(varID, value);
   }
   
-  //Sets deep copy of DT in RODT
   public void setRODataTable(String txnID) {
-	  HashMap<Integer,Variable> copy = new HashMap<Integer,Variable>(this.dataTable.getDT());
-	  this.RODataTable.put(txnID, copy);
+    HashMap<Integer,Integer> copy = new HashMap<Integer,Integer>();
+    for(Integer varID : this.dataTable.getDT().keySet()) {
+      int varValue = this.dataTable.getDT().get(varID).getValue();
+      copy.put(varID, varValue);
+    }
+    this.RODataTable.put(txnID, copy);
   }
   
-  public HashMap<Integer,Variable> getRODataTable(String txnID){
+  public HashMap<Integer,Integer> getRODataTable(String txnID){
 	  return this.RODataTable.get(txnID);
   }
   
