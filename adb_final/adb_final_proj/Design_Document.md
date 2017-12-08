@@ -1,5 +1,6 @@
 #Advanced Database Systems Final Project
-Authors: Scott Floam and Pratik Karnik
+
+#Authors: Scott Floam and Pratik Karnik
 
 This project will demonstrate distributed replicated concurrency control and recovery. This project creates a light-weight, distributed database, with multiversion read consistency, deadlock detection, replication, failure, and recovery. 
 
