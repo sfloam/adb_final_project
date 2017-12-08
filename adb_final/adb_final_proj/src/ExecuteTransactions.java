@@ -16,29 +16,50 @@ public class ExecuteTransactions {
    * (optional) Outputs: void
    */
 
+  /**
+   * This function reads from a given input file based on the number of command line arguments. In case a file is passed over the command line,
+   * then the application considers it as the input. In case a command line argument is not passed, the program asks the user how the user
+   * wants to enter the input file. If the user enters 1, the user is asked to enter the file name. In case the user enters 2, the user can enter the whole file through
+   * standard input.
+   * 
+   * @param args Command Line Arguments
+   */
   public static void read_file(String[] args) {
     String file_name = "";
-
-    if ((args.length > 0 && args.length < 3)) {
-      boolean debugFlag = (args.length == 2 && args[1].equals("--debug"));
+    TransactionManager tm = new TransactionManager();
+    boolean isNotStandardInput = true;
+    
+    if(args.length == 0) {
+      System.out.println("How are you entering the input? ");
+      System.out.println("Please Enter 1 for entering via input file ");
+      System.out.println("Please Enter 2 for entering via standard input \n");
+      Scanner src = new Scanner(System.in);
+      int userInput = src.nextInt();
+      if(userInput == 1) {
+        System.out.println("Please Enter the file name\n");
+        file_name = src.next();
+      } else if(userInput == 2) {
+        System.out.println("Please input your file\n");
+        isNotStandardInput = false;
+        while(src.hasNext()) {
+          tm.assignTransaction(src.next().trim());
+        }
+        System.exit(0);
+      }
+    } else if(args.length == 1) {
       file_name = args[0];
-
+    }
+    
+    if(isNotStandardInput) {
       try {
         Scanner fileScanner = new Scanner(new File(file_name));
-        TransactionManager tm = new TransactionManager();
 
         while (fileScanner.hasNextLine()) {
           String line = fileScanner.nextLine();
-          if (debugFlag) {
-            System.out.println(line);
-          }
 
           if (isDumpOutput(line) || (isComment(line) || isEmpty(line))) {
             if (isDumpOutput(line)) {
               while (fileScanner.hasNextLine() && !isComment(fileScanner.nextLine())) {
-                if (debugFlag) {
-                  System.out.println(line);
-                }
               }
             }
           } else {
@@ -49,8 +70,6 @@ public class ExecuteTransactions {
       } catch (FileNotFoundException e) {
         System.out.println("File not found!");
       }
-    } else {
-      System.out.println("You entered an invalid argument or did not provide a data file!");
     }
   }
 
