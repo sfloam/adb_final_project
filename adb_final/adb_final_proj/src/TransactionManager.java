@@ -6,10 +6,11 @@ import java.util.LinkedList;
 import java.util.Set;
 
 /**
- * <h1>Transaction Manager</h1> The TransactionManager assigns each operation provided by the user's
- * text file. The TransactionManager reads the parsed operation and determines if it is a begin,
- * read, write, read only, dump, fail, etc. Depending on the operation, the TransactionManager
- * executes an action (see below).
+ * <h1>Transaction Manager</h1> 
+ * <span>The TransactionManager assigns each operation provided by the user's</span>
+ * <span>text file or operations entered directly by the user. The TransactionManager reads the parsed 
+ * <span>operation and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. 
+ * <span> Depending on the operation, the TransactionManager executes an action</span>
  * 
  * <ul>
  * <li>Properties</li>

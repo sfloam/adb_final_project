@@ -110,7 +110,7 @@ public class Transaction {
 
   /**
    * <strong>toString</strong>: outputs information about the {@link Transaction}
-   * 
+   * return information about the {@link Transaction}
    */
   public String toString() {
 
@@ -120,6 +120,11 @@ public class Transaction {
     return output;
   }
 
+  /**
+   * <strong>isWriteLockPresentOnVariable</strong> determines if there is a write-lock present on a particular {@link Variable}</strong>
+   * @param varID - the ID of a {@link Variable}
+   * @return
+   */
   public boolean isWriteLockPresentOnVariable(int varID) {
     for (LockObj eachLock : locksHeldByTransaction) {
       if (eachLock.getLockType().equals(GlobalConstants.writeLock)
@@ -130,19 +135,36 @@ public class Transaction {
     return false;
   }
 
+  /**
+   * <strong>getLocksHeldByTransaction</strong>: gets a list of {@link LockObj}(s) held by this {@link Transaction}
+   * @return a list of {@link LockObj}(s) held by this {@link Transaction}
+   */
   public ArrayList<LockObj> getLocksHeldByTransaction() {
     return locksHeldByTransaction;
   }
 
+  /**
+   * <strong>setLocksHeldByTransaction</strong>: sets the list of {@link LockObj}(s) held by this {@link Transaction}
+   * @param locksHeldByTransaction a list of {@link LockObj}(s) held by this {@link Transaction}
+   */
   public void setLocksHeldByTransaction(ArrayList<LockObj> locksHeldByTransaction) {
     this.locksHeldByTransaction = locksHeldByTransaction;
   }
 
+  /**
+   * <strong>addLockToLocksHeldByTransaction</strong>: adds a single {@link LockObj} to a list of {@link LockObj}(s) held by this {@link Transaction}
+   * @param varID - the ID of a {@link Variable}
+   * @param lockType - the type of {@link LockObj} that one wants to add to the list of {@link LockObj}(s) held by this {@link Transaction}
+   */
   public void addLockToLocksHeldByTransaction(int varID, String lockType) {
     LockObj newLock = new LockObj(lockType, this.txnID, varID);
     locksHeldByTransaction.add(newLock);
   }
 
+  /**
+   * <strong>removeLockFromLocksHeldByTransaction</strong>: removes all {@link LockObj}(s) held by a {@link Variable}
+   * @param varID - the ID of a {@link Variable}
+   */
   public void removeLockFromLocksHeldByTransaction(int varID) {
     for (LockObj eachLock : locksHeldByTransaction) {
       if (eachLock.getVariableID() == varID) {
@@ -151,28 +173,52 @@ public class Transaction {
     }
   }
 
+  /**
+   * <strong> addOperation</strong>: placeholder method for added functionality
+   * @param opObj - an {@link Operation} object
+   */
   public void addOperation(Operation opObj) {
 
   }
 
+  /**
+   * <strong>getTransactionWaitingForCurrentTransaction</strong>: gets the {@link Transaction} waiting for the current {@link Transaction} in question
+   * @returns the {@link Transaction} waiting for the current {@link Transaction} in question
+   */
   public String getTransactionWaitingForCurrentTransaction() {
     return transactionWaitingForCurrentTransaction;
   }
 
+  /**
+   * <strong>setTransactionWaitingForCurrentTransaction</strong>: sets the {@link Transaction} waiting for the current {@link Transaction} in question
+   * @param transactionWaitingForCurrentTransaction - the {@link Transaction} waiting for the current {@link Transaction} in question
+   */
   public void setTransactionWaitingForCurrentTransaction(
       String transactionWaitingForCurrentTransaction) {
     this.transactionWaitingForCurrentTransaction = transactionWaitingForCurrentTransaction;
   }
 
+  /**
+   * <strong>getTransactionsWhichCurrentTransactionWaitsFor</strong>: gets the IDs of the {@link Transaction}(s) which the current {@link Transaction} is waiting for
+   * @return
+   */
   public Set<String> getTransactionsWhichCurrentTransactionWaitsFor() {
     return transactionsWhichCurrentTransactionWaitsFor;
   }
 
+  /**
+   * <strong>setTransactionsWhichCurrentTransactionWaitsFor</strong>: adds IDs to the set of {@link Transaction} IDs which the current {@link Transaction} is waiting
+   * @param transactionsWhichCurrentTransactionWaitsFor - IDs which the current {@link Transaction} is waiting
+   */
   public void setTransactionsWhichCurrentTransactionWaitsFor(
       Set<String> transactionsWhichCurrentTransactionWaitsFor) {
     this.transactionsWhichCurrentTransactionWaitsFor = transactionsWhichCurrentTransactionWaitsFor;
   }
 
+  /**
+   * <strong>getAllLocksForVariable</strong>: gets all {@LockObj}(s) for a particular {@link Variable} held by a {@link Transaction}
+   * @param varID - IDs of {@link Variable}(s) with {@link LockObj} held by a {@link Transaction}
+   */
   public ArrayList<LockObj> getAllLocksForVariable(int varID, String lockType) {
     ArrayList<LockObj> allLocksForVariable = new ArrayList<LockObj>();
     for (LockObj eachLock : locksHeldByTransaction) {
@@ -183,6 +229,10 @@ public class Transaction {
     return allLocksForVariable;
   }
   
+  /**
+   * <strong>setSiteAccessedByTransaction</strong>:adds a list of {@link Site}(s) accessed by a {@link Transaction}
+   * @param siteAccessedByTransaction - a list of {@link Site}(s) accessed by a {@link Transaction}
+   */
   public void setSiteAccessedByTransaction(ArrayList<Integer>siteAccessedByTransaction) {
     for(int i = 0; i < siteAccessedByTransaction.size(); i++) {
       if (!this.sitesAccessedByTransaction.contains(siteAccessedByTransaction.get(i))) {
@@ -191,10 +241,18 @@ public class Transaction {
     }
   }
   
+  /**
+   * <strong>getSiteAccessedByTransaction</strong>:gets a list of {@link Site}(s) accessed by a {@link Transaction}
+   * @return a list of {@link Site}(s) accessed by a {@link Transaction}
+   */
   public ArrayList<Integer> getSiteAccessedByTransaction() {
     return this.sitesAccessedByTransaction;
   }
   
+  /**
+   * <strong>isReadOnly</strong>: determines if a {@link Transaction} is ReadOnly
+   * @return true if a {@link Transaction} is ReadOnly, otherwise false
+   */
   public boolean isReadOnly() {
 	  return this.readOnly;
   }
