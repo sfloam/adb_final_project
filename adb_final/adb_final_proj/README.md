@@ -1,9 +1,6 @@
 # adb_final_project
 Advanced Database Systems Final Project
 
-# adb_final_project
-Advanced Database Systems Final Project
-
 This project will demonstrate distributed replicated concurrency control and recovery. This project creates a light-weight, distributed database, with multiversion read consistency, deadlock detection, replication, failure, and recovery. 
 
 Our system executes transactions using strict two phase locking (using read and write locks) at each site and validation at commit time. A transaction may read a variable and later write that same variable as well as others. Since this site uses replication, we implement the available copies algorithm which allows writes and commits to just the available sites. For example, if Site 1 is down, its last committed value of 123 may be different from Site 2, which is up and has a value of 573.
@@ -21,3 +18,11 @@ The DataTable class holds Variables at a Site. All Sites have a DataTable that h
 The GlobalConstants class stores commonly used constant values.
 
 The LockObj class stores information about a lock held by a transaction. These locks are used to determine if a transaction can access a variable a particular site.
+
+The LockTable class contains a list of locks on Variables held by Transaction at a given Site.
+
+The Operation class stores information about each action performed in the system.
+
+The Site class consists of a DataTable that holds Variables and a LockTable corresponding with those Variables. See DataTable and LockTable for more information about these respective classes.
+
+The Transaction class keeps track of the transaction details. It holds information such as whether it is blocked, how long it has been running, the id of the transaction, and the variables corresponding to that Transaction. In addition, it also keeps a log of its operations.

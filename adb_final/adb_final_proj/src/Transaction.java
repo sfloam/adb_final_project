@@ -9,13 +9,11 @@ import java.util.Set;
 /**
  * 
  * @author scottfloam and pratikkarnik
- * 
- *         <h1>Transaction</h1> The Transaction keeps track of the transaction details. It holds
- *         information such as whether it is blocked, how long it has been running, the id of the
- *         transaction, and the variables corresponding to that Transaction. In addition, it also
- *         keeps a log of its operations in the operations queue. We need to think about if we want
- *         this to be a stack instead. It may make more sense to pop out most recent transactions to
- *         revert actions. TBD.
+ * <h1>Transaction</h1>
+ * <span> The {@link Transaction} class keeps track of the {@link Transaction} details. </span>
+ * <span> It holds information such as whether it is blocked, how long it has been </span>
+ * <span> running, the id of the {@link Transaction}, and the {@link Variable}(s) corresponding to that</span>
+ * <span> {@link Transaction}. In addition, it also keeps a log of its {@link Operation}(s).</span>
  *
  */
 public class Transaction {
@@ -45,92 +43,74 @@ public class Transaction {
   }
 
   /**
-   * compareTo would be necessary if you needed to sort transactions in some manner. May not be
-   * necessary. Could be possibly used for age sorting?
-   * 
-   * @param other_transaction
-   * @return
-   */
-  /*
-   * public int compareTo(Transaction other_transaction) { int res = this.id - other_transaction.id;
-   * System.out.println(this + " compared to " + other_transaction); return res; }
-   */
-
-  /**
-   * gets id of the transaction
-   * 
-   * @return
+   * <strong>getID</strong>: gets id of the {@link Transaction}
+   * @return the id of the {@link Transaction}
    */
   public String getID() {
     return this.txnID;
   }
 
   /**
-   * gets age of the transaction age is simply the initial order in which it was inserted into the
-   * running queue
-   * 
-   * @return
+   * <strong>getAge</strong>: gets the age of a {@link Transaction}
+   * <span> Note, the age is incremented by one when a new {@link Transaction} begins.
+   * <span> Thus, older {@link Transaction}(s) have smaller ages.
+   * @return the age of a {@link Transaction}
    */
   public Integer getAge() {
     return this.age;
   }
 
   /**
-   * setAge should only be done once when Transaction is initialized
-   * 
-   * @param age
+   * <strong>setAge</strong>: sets the age of a {@link Transaction}
+   * @param age - the age of a {@link Transaction}
    */
   public void setAge(int age) {
     this.age = age;
   }
 
-
+  /**
+   * <strong>getTransactionType</strong>: gets the type of {@link Transaction} 
+   * @return the type of {@link Transaction} (i.e. RO, RW)
+   */
   public String getTransactionType() {
     return transactionType;
   }
 
   /**
-   * getCorrespondingVars keeps a HashSet of all Variable IDs used by this Transaction used for
-   * determining which Site(s) need to be updated at commit time. We then use these Variable IDs to
-   * find the Site(s) that have variables that we need to update. We could also use this as a means
-   * to determine next available free site quickly.
-   * 
-   * @return
+   * <strong>getCorrespondingVars</strong>: gets a HashSet of all {@link Variable} IDs used by this {@link Transaction}
+   * @return a HashSet of all {@link Variable} IDs used by this {@link Transaction}
    */
   public HashSet<Integer> getCorrespondingVars() {
     return this.correspondingVars;
   }
 
   /**
-   * addToCorrespondingVars adds a corresponding Variable id to the list of correspondingVariables
-   * associated with a given transaction
-   * 
-   * @param varID
+   * <strong>addToCorrespondingVars</strong>: adds a corresponding {@link Variable} id to the list of correspondingVariables
+   * associated with this {@link Transaction}
+   * @param varID - ID of a {@link Variable}
    */
   public void addToCorrespondingVars(int varID) {
     this.correspondingVars.add(varID);
   }
 
   /**
-   * setBlocked simply toggles the blocked boolean on and off (blocked is initialized to false)
-   * 
+   * <strong>setBlocked</strong>: sets a {@link Transaction} to blocked or not blocked
    */
   public void setBlocked(boolean blocked) {
     this.blocked = blocked;
   }
 
   /**
-   * isBlocked returns if Transaction is blocked by another Transaction
-   * 
-   * @return boolean
-   * 
+   * <strong>getBlocked</strong>: determines if a {@link Transaction} to blocked or not blocked
+   * @return true if a {@link Transaction} is blocked, otherwise false
    */
   public boolean isBlocked() {
     return this.blocked;
   }
 
   /**
-   * toString() prints out the Transaction information
+   * <strong>toString</strong>: outputs information about the {@link Transaction}
+   * 
    */
   public String toString() {
 
