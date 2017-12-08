@@ -2,6 +2,8 @@
 
 **Authors**: Scott Floam and Pratik Karnik
 
+Note to the grader: The authors of this project worked together on all functions. Both partners played an equal role in the design and coding of each function in this project. To avoid redundancy in mentioning authorship for each function, we specify this at the top of each class.
+
 To run this program, simply complete the following instructions:
 
 In the commandline enter:
