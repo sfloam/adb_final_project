@@ -1,6 +1,0 @@
-1511746726631	Rename field 'isLocked'
-1511794017804	Rename local variable 'transaction'
-1511799301038	Rename local variable 'varInt'
-1511799314633	Rename local variable 'transInt'
-1511801050370	Rename method 'addVar'
-1511804226660	Rename method 'addTransaction'
