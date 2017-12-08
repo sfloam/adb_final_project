@@ -33,3 +33,6 @@ The Variable class keeps contains information about the data being stored across
 The TransactionManager class assigns each operation provided by the user's text file or operations entered directly by the user. The TransactionManager reads the parsed operation and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. Depending on the operation, the TransactionManager executes an action. The TransactionManager drives all operations. It determines which Transactions can operate, which have to wait, and which must abort. The TransactionManager also can cause sites to fail and recover. The TransactionManager is robust and understands how to detect situations where deadlock occurs. It chooses the youngest Transaction when aborting a Transaction. See the API for additional information.
 
 The ExecuteTransaction class is used to parse the operation information to send to the TransactionManager class.
+
+Please see RepCRec.gif for a visual overview.
+Please see README.md for information on how to run this application.
