@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * <h1>Transaction Manager</h1> 
  * <span>The {@link TransactionManager} assigns each {@link Operation} provided by the user's</span>
- * <span>text file or {@link Operation} entered directly by the user. The {@link TransactionManager} reads the parsed  </span>
+ * <span>text file. The {@link TransactionManager} reads the parsed  </span>
  * <span>{@link Operation} and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. </span>
  * <span> Depending on the {@link Operation}, the {@link TransactionManager} executes an action.</span>
  * 
@@ -25,7 +25,6 @@ public class TransactionManager {
 	private HashMap<String, Transaction> blockedTransactions;
 
 	public TransactionManager() {
-		// TODO: May not need all of these
 		this.time = 0;
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
@@ -43,6 +42,7 @@ public class TransactionManager {
 			}
 		}
 	}
+
 	/**
 	 * <strong>assignTransaction</strong>: assigns operations (a tick from the text file or user input (i.e. begin(T1)) to perform an {@link Operation}
 	 * @param an operation such as (i.e. begin(T1), end(T1), W(T1, x4, 200), beginRO(T1), R(T1, x2), dump(), dump(x4), dump(4), fail(1), recover(1))
@@ -71,7 +71,6 @@ public class TransactionManager {
 			int value = readTransaction(transactionInfo[0], varID);
 			if (value != -1 && value != -2 && value != -3) {
 			  //System.out.println("Transaction "+transactionInfo[0]+" read variable "+varID+" with value "+value);
-			  // TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
 			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
 	            Operation newOperation =
@@ -88,7 +87,6 @@ public class TransactionManager {
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			int valueToBeWritten = Integer.parseInt(transactionInfo[2].trim());
-			// TODO: You need to save the operation
 			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
 		} else if (operationLine.startsWith("end(")) {
 			String transactionName = operationLine.substring(4, operationLine.length() - 1);
@@ -271,7 +269,7 @@ public class TransactionManager {
       }
     }
   }
- 
+
   /**
    * <strong>initiateActualWriteOnSites</strong>: once a write lock is obtained, we initiate the actual writes on the {@link Variable}(s) at the {@link Sites}(s). The value is stored as intermediate values in the {@link Variable} as the {@link Transaction} has not been committed yet.
    * @param txnID - the id  of a {@link Transaction}
@@ -432,7 +430,7 @@ public class TransactionManager {
         + " aborted because it was the youngest transaction and there was deadlock.");
     this.abort(this.currentTransactions.get(youngestTxnID));;
   }
-    
+  
   /**
    * <strong>checkIfDeadlocked</strong>: this method checks if a deadlock exists. We compare two {@link Transaction}(s) and check if a deadlock exists between them. 
    * If the {@link Transaction}(s) are waiting on each other, then we abort the younger {@link Transaction}. If there is no {@link Transaction} waiting for the older {@link Transaction} 
@@ -497,7 +495,7 @@ public class TransactionManager {
       }
     }
   }
-  
+
   /**<strong>writeTransaction</strong> This handles the functionality of the write operation of a {@link Transaction}. If a {@link Transaction} 
    * does not have a write lock present on a {@link Variable}, it finds the {@link Site}(s) which have the {@link Variable}.
    * If there is an older {@link Transaction} that has a write lock on the {@link Variable} which the current {@link Transaction} needs to write on,
@@ -603,6 +601,10 @@ public class TransactionManager {
             // Transaction does not have all the write lock it needs
             obtainAllPossibleWriteLocksOnVariable(varID, txnID);
             makeTransactionWaitForTransactionWithLock(txnID, varID);
+            Operation newOperation =
+                new Operation(time, GlobalConstants.writeOperation, varID, value);
+            insertToWaitList(txnID, newOperation);
+            checkIfCycleExists(txnID);
           }
         }
       }
@@ -749,7 +751,7 @@ public class TransactionManager {
               if(currentTransactions.containsKey(eachTransID)) {
                 abort(currentTransactions.get(eachTransID));
                 System.out.println("Transaction: " + eachTransID
-                    + " aborted because wrote to a variable at a site before the site failed");
+                    + " aborted because accessed a variable at a site before the site failed");
               }
             }
           }
@@ -808,7 +810,6 @@ public class TransactionManager {
         this.transactionWaitList.remove(txnID);
         currentTransactions.remove(txnID);
 	}
-
     
    /**<strong>dump</strong>: dumps information about all the {@link Site}(s) to the standard output
     */
