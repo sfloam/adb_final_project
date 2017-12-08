@@ -21,9 +21,8 @@ public class ExecuteTransactions {
   /**
    * <strong>read_file</strong>
    * <span>This function reads from a given input file based on the number of command line arguments. In case a file is passed over the command line,</span>
-   * <span>then the application considers it as the input. In case a command line argument is not passed, the program asks the user how the user</span>
-   * <span>wants to enter the input file. If the user enters 1, the user is asked to enter the file name. In case the user enters 2, the user can enter the whole file through</span>
-   * <span>standard input.</span>
+   * <span>then the application considers it as the input. In case a command line argument is not passed, the program asks the user the user</span>
+   * <span>to enter the file name or path.</span>
    * @param args Command Line Arguments
    */
   public static void read_file(String[] args) {
@@ -32,22 +31,10 @@ public class ExecuteTransactions {
     boolean isNotStandardInput = true;
     
     if(args.length == 0) {
-      System.out.println("How are you entering the input? ");
-      System.out.println("Please Enter 1 for entering via input file ");
-      System.out.println("Please Enter 2 for entering via standard input \n");
       Scanner src = new Scanner(System.in);
-      int userInput = src.nextInt();
-      if(userInput == 1) {
-        System.out.println("Please Enter the file name\n");
-        file_name = src.next();
-      } else if(userInput == 2) {
-        System.out.println("Please input your file\n");
-        isNotStandardInput = false;
-        while(src.hasNext()) {
-          tm.assignTransaction(src.next().trim());
-        }
-        System.exit(0);
-      }
+      System.out.println("Please Enter the file name");
+      file_name = src.next();
+      src.close();
     } else if(args.length == 1) {
       file_name = args[0];
     }

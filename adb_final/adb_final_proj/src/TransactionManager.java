@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * <h1>Transaction Manager</h1> 
  * <span>The {@link TransactionManager} assigns each {@link Operation} provided by the user's</span>
- * <span>text file or {@link Operation} entered directly by the user. The {@link TransactionManager} reads the parsed  </span>
+ * <span>text file. The {@link TransactionManager} reads the parsed  </span>
  * <span>{@link Operation} and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. </span>
  * <span> Depending on the {@link Operation}, the {@link TransactionManager} executes an action.</span>
  * 
@@ -751,7 +751,7 @@ public class TransactionManager {
               if(currentTransactions.containsKey(eachTransID)) {
                 abort(currentTransactions.get(eachTransID));
                 System.out.println("Transaction: " + eachTransID
-                    + " aborted because wrote to a variable at a site before the site failed");
+                    + " aborted because accessed a variable at a site before the site failed");
               }
             }
           }
