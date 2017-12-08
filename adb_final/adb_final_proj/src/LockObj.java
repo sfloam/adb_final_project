@@ -48,22 +48,32 @@ public class LockObj {
   }
 
   /**
-   * <strong>getLockType</strong>: gets the locktype (i.e. R, W, etc.) of the {@link Transaction} associated with this lock
+   * <strong>getLockType</strong>: gets the lock-type (i.e. R, W, etc.) of the {@link Transaction} associated with this lock
    * @return
    */
   public String getLockType() {
     return lockType;
   }
 
+  /**
+   * <strong>setLockType</strong>: sets the lock-type (i.e. R, W, etc.) of the {@link Transaction} associated with this lock
+   * @param lockType
+   */
   public void setLockType(String lockType) {
     this.lockType = lockType;
   }
 
+  /**
+   * <strong>toString</strong>: returns the {@link Variable} ID, {@link Transaction} ID, and the associated lock-type (i.e. R, W, etc.)
+   */
   @Override
   public String toString() {
     return this.variableID + " " + this.transactionID + " " + this.lockType;
   }
 
+  /**
+   * <strong>equals</strong>: allows for the comparison of {@link LockObj}
+   */
   @Override
   public boolean equals(Object obj) {
     boolean isEqual = false;

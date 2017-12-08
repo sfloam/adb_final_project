@@ -6,112 +6,15 @@ import java.util.LinkedList;
 import java.util.Set;
 
 /**
- * <h1>Transaction Manager</h1> The TransactionManager assigns each operation provided by the user's
- * text file. The TransactionManager reads the parsed operation and determines if it is a begin,
- * read, write, read only, dump, fail, etc. Depending on the operation, the TransactionManager
- * executes an action (see below).
- * 
- * <ul>
- * <li>Properties</li>
- * <ul>
- * <li><strong>running:</strong> a linked list of Transaction objects to determine which
- * transactions are currently running</li>
- * <li><strong>age:</strong> a global integer to keep track of the order in which transactions began
- * (may not be needed)</li>
- * <li><strong>dm:</strong> the DataManager object that was passed by ExecuteTransactions</li>
- * </ul>
- * </ul>
- * 
+ * <h1>Transaction Manager</h1> 
+ * <span>The {@link TransactionManager} assigns each {@link Operation} provided by the user's</span>
+ * <span>text file or {@link Operation} entered directly by the user. The {@link TransactionManager} reads the parsed  </span>
+ * <span>{@link Operation} and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. </span>
+ * <span> Depending on the {@link Operation}, the {@link TransactionManager} executes an action.</span>
  * 
  */
 public class TransactionManager {
-  /**
-   * assignTransaction
-   * 
-   * @param operations is a tick from the text file (i.e. begin(T1))
-   *        <p>
-   *        <strong>Types of Operations</strong>
-   *        <ul>
-   * 
-   *        <li>Begin</li>
-   *        <ul>
-   *        <li>Parse begin, T1 (or other transaction number)</li>
-   *        <li>Create Transaction</li>
-   *        <li>Assign transaction an age</li>
-   *        <li>Increment the age</li>
-   *        </ul>
-   *        <li>Write</li>
-   *        <ul>
-   *        <li>Parse W(T4, x4,35) so that we have [W, T4, x4, 35].</li>
-   *        <li>Check if the write is done on a currently running transaction</li>
-   *        <li>If the operation is a RW and if there is not a write lock on the variable check
-   *        which sites have that variable</li>
-   *        <li>Add the operation we are performing to the transaction's operations ArrayList for
-   *        logging</li>
-   *        <li>Add the variable id to the Transaction's correspondingVars HashSet<Integer> to
-   *        determine which Variables to unlock at the end (when commit or even abort).</li>
-   *        <li>Execute write instructions</li>
-   *        <ul>
-   *        <li>parse varID, transID, and varValue</li>
-   *        <li>If the variable is locked because of another Transaction, we need some action</li>
-   *        <li>Otherwise, lock the Variable, assign previousTransactionID to the ID of the
-   *        Transaction performing the write, and that Variable's correspondingTrasactionID
-   *        HashSet<Integer> to include this Transaction's ID</li>
-   *        </ul>
-   *        </ul>
-   * 
-   *        <li>Read</li>
-   *        <ul>
-   *        <li>Parse R(T4, x4) so that we have [R, T4, x4].</li>
-   *        <li>Assign Transaction an age</li>
-   *        <li>Add the operation we are performing to the transaction's operations ArrayList for
-   *        logging</li>
-   *        <li>Add the variable id to the Transaction's correspondingVars HashSet<Integer> to
-   *        determine which Variables to unlock at the end (when commit or even abort).</li>
-   *        <li>Execute read instructions</li>
-   *        <ul>
-   *        <li>Recover</li>
-   *        <ul>
-   *        <li>
-   *        </ul>
-   *        </ul>
-   *        <li>Fail</li>
-   *        <ul>
-   *        <li>Parse fail(2) so that we have [fail, 2].</li>
-   *        <li>If we have a site 2 (which we should) then execute the fail command via the
-   *        DataManager class on that site.</li>
-   *        <li>Fail will set the Site's LockTable to null.
-   *        </ul>
-   *        <li>Dump</li>
-   *        <ul>
-   *        <li>Parse dump() so that we have [dump].</li>
-   *        <li>Parse dump("i") [dump, siteID].</li>
-   *        <li>Parse dump("x.j") so that we have [dump, "x.j"]. Then parse "x.j" so that we have
-   *        ["varID","siteID"]</li>
-   *        <li>To simplify the parsing, we require a "." in between "x" and "j" so that we can
-   *        distinguish when the user wants to perform dump(i) v.s. dump(xj)</li>
-   *        </ul>
-   *        <li>End</li>
-   *        <ul>
-   *        <li>Parse end(T2) so that we have [end, T2].</li>
-   *        <li>Parse transID (i.e. 2 from T2).</li>
-   *        <li>Get list of variables associated with the Transaction that ended and point to
-   *        transVars. This will save us time because we will not have to go through each site. We
-   *        only have to go to sites associated with a particular Variable that were found in a
-   *        particular Transaction.</li>
-   *        <li>We check to make sure that the Transaction has variables</li>
-   *        <li>For each variableID in transVars, go to the DataManager get the Variable from
-   *        DataManager's vars, to get the site locations associated with that Variable. Then,
-   *        iterate through those site locations and unlock the variable. Also, we override the
-   *        value of the Variable's value in DataManager's vars with the Variable's value in a
-   *        replicated table to ensure the vars has the most up to date value at the end of a
-   *        committed transaction.
-   *        </ul>
-   *        <ul>
-   *        </ul>
-   */
   
-
 	private LinkedList<Transaction> aborted;
 	private ArrayList<DataManager> dmList;
 	private int age;
@@ -122,7 +25,6 @@ public class TransactionManager {
 	private HashMap<String, Transaction> blockedTransactions;
 
 	public TransactionManager() {
-		// TODO: May not need all of these
 		this.time = 0;
 		this.aborted = new LinkedList<Transaction>();
 		currentTransactions = new HashMap<String, Transaction>();
@@ -142,10 +44,8 @@ public class TransactionManager {
 	}
 
 	/**
-	 * Parses through the line sent to the function and accordingly 
-	 * assigns the transaction
-	 * 
-	 * @param operationLine
+	 * <strong>assignTransaction</strong>: assigns operations (a tick from the text file or user input (i.e. begin(T1)) to perform an {@link Operation}
+	 * @param an operation such as (i.e. begin(T1), end(T1), W(T1, x4, 200), beginRO(T1), R(T1, x2), dump(), dump(x4), dump(4), fail(1), recover(1))
 	 */
 	public void assignTransaction(String operationLine) {
 		if (operationLine.startsWith("dump()")) {
@@ -171,7 +71,6 @@ public class TransactionManager {
 			int value = readTransaction(transactionInfo[0], varID);
 			if (value != -1 && value != -2 && value != -3) {
 			  //System.out.println("Transaction "+transactionInfo[0]+" read variable "+varID+" with value "+value);
-			  // TODO: What does a read do? I guess nothing since dump will show it's value?
 			} else if (value == -1) {
 			  makeTransactionWaitForTransactionWithLock(transactionInfo[0], varID);
 	            Operation newOperation =
@@ -188,7 +87,6 @@ public class TransactionManager {
 			int varIDIndex = transactionInfo[1].indexOf("x") + 1;
 			int varID = Integer.parseInt(transactionInfo[1].substring(varIDIndex));
 			int valueToBeWritten = Integer.parseInt(transactionInfo[2].trim());
-			// TODO: You need to save the operation
 			writeTransaction(transactionInfo[0], varID, valueToBeWritten);
 		} else if (operationLine.startsWith("end(")) {
 			String transactionName = operationLine.substring(4, operationLine.length() - 1);
@@ -203,9 +101,9 @@ public class TransactionManager {
 	}
 
 	/**
-	 * Starts the transaction
-	 * @param txnID
-	 * @param transactionType
+	 *<strong>startTransaction</strong>: starts the {@link Transaction}, sets the age, and the type of {@link Transaction}, and puts it into the currentTransaction HashMap
+	 *@param txnID - id of the {@link Transaction}
+	 *@param transactionType - type of {@link Transaction}
 	 */
 	private void startTransaction(String txnID, String transactionType) {
 		if (!currentTransactions.containsKey(txnID)) {
@@ -216,10 +114,9 @@ public class TransactionManager {
 	}
 	
 	/**
-	 * Creates Read-Only Tables for the transaction
-	 * 
-	 * @param transactionName
-	 */
+     *<strong>createROTablesForTransaction</strong>: creates a read only table
+     *@param txnID - id of the {@link Transaction}
+     */
 	private void createROTablesForTransaction(String transactionName) {
 		for (int i = 1; i < dmList.size(); i++) {
 			if(dmList.get(i).getSite()!= null){
@@ -230,16 +127,14 @@ public class TransactionManager {
 		}
 	}
 
-	/**
-	 * This function is called when a a particular transaction gets an end call.
-	 * Whenever the transaction ends, if the we update the existing value with the intermediate value
-	 * Also we remove the locks present on the existing transaction. If no site is available to commit
-	 * the transaction is aborted. Once the transaction ends, we execute the transaction which are 
-	 * waiting for the transaction which just ended.
-	 * 
-	 * @param txnID
-	 */
-	// TODO find out what is going on with writes and why not copying
+   /**
+    * <strong>endTransaction</strong>: This function is called when a particular {@link Transaction} gets an end call.</span>
+    * <span>Whenever the {@link Transaction} ends, if the we update the existing value with the intermediate value of the {@link Variable}.</span>
+    * <span>Also we remove the {@link LockObj} present on the existing {@link Variable}. If no {@link Site} is available to commit the values,</span>
+    * <span>the {@link Transaction} is aborted. Once the {@link Transaction} ends, we execute the {@link Transaction}(s) which are </span>
+    * <span>waiting for the {@link Transaction} that just ended.</span>
+    * @param txnID - id of the {@link Transaction}
+    */
 	private void endTransaction(String txnID) {
 	  if(currentTransactions.containsKey(txnID)) {
 	      Set<Integer> ctSet = currentTransactions.get(txnID).getCorrespondingVars();
@@ -273,13 +168,12 @@ public class TransactionManager {
 	        currentTransactions.remove(txnID);
 	  }
 	}
-	
+
 	/**
-	 * This function returns all the sites which are currently active and have the particular variable
-	 * 
-	 * @param varID
-	 * @return
-	 */
+     * <strong>getActiveSitesHavingVariable</strong>This function returns all the {@link Site}(s) which are currently active and have the particular {@link Variable}
+     * @param varID - id of the {@link Variable}
+     * @return sitesHavingVariable - all the {@link Site}(s) which are currently active and have the particular {@link Variable}
+     */
 	private ArrayList<Site> getActiveSitesHavingVariable(int varID) {
 		ArrayList<Site> sitesHavingVariable = new ArrayList<Site>();
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
@@ -294,20 +188,20 @@ public class TransactionManager {
 		return sitesHavingVariable;
 	}
 
-  /**
-   * 
-   * This function checks if there exists an older transaction has a lock on a variable
-   * To do this, it iterates over all the locks which are present on the variable and gets their
-   * respective transactions. If the age of any of the transaction is less than the age of the
-   * transaction under consideration and if that older transaction holds a write lock on the variable,
-   * we return the transaction ID of that older transaction for further processing. If not then
-   * the txn ID of the current transaction is returned.
-   * 
-   * @param transactionAge
-   * @param varID
-   * @param currentTxnID
-   * @return
-   */
+	/**
+	 * <strong>checkIfOlderTransactionHasLockOnVariable</strong> 
+	 * <span> This function checks if an existing an older {@link Transaction} </span>
+	 * <span> has a {@link LockObj} on a {@link Variable}. To do this, it iterates over all the {@link LockObj}(s) which are present on </span>
+	 * <span> the {@link Variable} and gets their respective {@link Transaction}(s). If the age of any of the {@link Transaction} is less than the age of the</span>
+	 * <span> {@link Transaction} under consideration and if that older {@link Transaction} holds a write {@link LockObj} on the {@link Variable},</span>
+	 * <span> we return the {@link Transaction} ID of that older {@link Transaction} for further processing. If not then the {@link Transaction} </span>
+	 * <span> ID of the current {@link Transaction} is returned.
+	 * 
+	 * @param transactionAge - the age of a {@link Transaction}
+	 * @param varID - the id  of a {@link Variable}
+	 * @param currentTxnID - the current ID of a {@link Transaction}
+	 * @return a {@link Transaction} ID
+	 */
   private String checkIfOlderTransactionHasLockOnVariable(int transactionAge, int varID, String currentTxnID) {
     for (int i = 1; i <= GlobalConstants.sites; i++) {
       Site currentSite = allSitesMap.get(i);
@@ -325,12 +219,9 @@ public class TransactionManager {
   }
 
   /**
-   * 
-   * This method returns a list of all the write locks on a particular variable from
-   * all the sites
-   * 
-   * @param varID
-   * @return
+   * <strong>getAllLocksFromAllSitesForVariable</strong>: This method returns a list of all the write locks on a particular {@link Variable} from all of the {@link Site}(s)
+   * @param varID - the id  of a {@link Variable}
+   * @return a list of {@link LockObj}(s)
    */
   private ArrayList<LockObj> getAllLocksFromAllSitesForVariable(int varID) {
     ArrayList<LockObj> allLocks = new ArrayList<LockObj>();
@@ -344,13 +235,11 @@ public class TransactionManager {
     }
     return allLocks;
   }
-
+  
   /**
-   * This function returns a list of all the unique locks for a particular variable
-   * from all the sites
-   * 
-   * @param varID
-   * @return
+   * <strong>getAllUniqueLocksFromAllSitesForVariable</strong>: this function returns a list of all the unique {@link LockObj}(s) for a particular {@link Variable} from all the {@link Site}(s)
+   * @param varID - the id  of a {@link Variable}
+   * @return a list of {@link LockObj}(s)
    */
   private ArrayList<LockObj> getAllUniqueLocksFromAllSitesForVariable(int varID) {
     ArrayList<LockObj> allLocks = new ArrayList<LockObj>();
@@ -366,12 +255,9 @@ public class TransactionManager {
   }
 
   /**
-   * 
-   * This function tries to obtain write locks on all copies of a variables across all
-   * the active sites
-   * 
-   * @param txnID
-   * @param varID
+   * <strong>obtainWriteLocksOnAllVariablesOnActiveSites</strong>: this function tries to obtain write {@link LockObj}(s) on all copies of a {@link Variable}(s) across all the active {@link Site}(s)
+   * @param txnID - the id  of a {@link Transaction}
+   * @param varID - the id  of a {@link Variable}
    */
   private void obtainWriteLocksOnAllVariablesOnActiveSites(String txnID, int varID) {
     for (int i = 1; i <= GlobalConstants.sites; i++) {
@@ -385,13 +271,10 @@ public class TransactionManager {
   }
 
   /**
-   * Once a write lock is obtained, we initiate the actual writes on the variables at the sites.
-   * The value is stored as intermediate values in the variable as the transaction has not
-   * been committed yet.
-   * 
-   * @param txnID
-   * @param varID
-   * @param value
+   * <strong>initiateActualWriteOnSites</strong>: once a write lock is obtained, we initiate the actual writes on the {@link Variable}(s) at the {@link Sites}(s). The value is stored as intermediate values in the {@link Variable} as the {@link Transaction} has not been committed yet.
+   * @param txnID - the id  of a {@link Transaction}
+   * @param varID - the id  of a {@link Variable}
+   * @param value - the value of a {@link Variable}
    */
   private void initiateActualWriteOnSites(String txnID, int varID, int value) {
     currentTransactions.get(txnID).addToCorrespondingVars(varID);
@@ -407,16 +290,11 @@ public class TransactionManager {
   }
 
   /**
-   * If a transaction cannot obtain a write lock on a variable, it needs to wait. However
-   * it has to ensure that it is waiting for the current transaction. This method iterates through
-   * all the locks present on a variable and if the current transaction does not hold a lock on it, and
-   * the transaction holding the lock does not have any transaction waiting for it then
-   * it puts the current transaction in the waiting list of the transaction holding a lock on it. If the transaction
-   * holding the lock has a transaction waiting for it then we check to see if a deadlock will happen or not if the current transaction
-   * waits for the transaction holding the lock.
-   * 
-   * @param txnID
-   * @param varID
+   * <strong>makeTransactionWaitForTransactionWithLock</strong>: if a transaction cannot obtain a write lock on a {@link Variable}, it needs to wait. However, it has to ensure that it is waiting for the correct {@link Transaction}. This method iterates through all the {@link LockObj}(s) present on a {@link Variable} and if the current {@link Transaction} does not hold a {@link LockObj} on it, and
+   * the {@link Transaction} holding the lock does not have any {@link Transaction} waiting for it, then it puts the current {@link Transaction} in the waiting list of the {@link Transaction} holding a {@link LockObj} on it. If the {@link Transaction}
+   * holding the {@LockObj} has a {@link Transaction} waiting for it, then we check to see if a deadlock will happen or not if the current {@link Transaction} waits for the {@link Transaction} holding the lock.
+   * @param txnID - the id  of a {@link Transaction}
+   * @param varID - the id  of a {@link Variable}
    */
   private void makeTransactionWaitForTransactionWithLock(String txnID, int varID) {
     Transaction presentTransaction = this.currentTransactions.get(txnID);
@@ -445,11 +323,9 @@ public class TransactionManager {
     }
   }
 
-  /**
-   * This function adds a particular transaction and its operation to the waitlist.
-   * 
-   * @param txnID
-   * @param newOp
+  /**<strong>insertToWaitList</strong>: this function adds a particular {@link Transaction} and its {@link Operation} to the waitlist.
+   * @param txnID - the id  of a {@link Transaction}
+   * @param newOp - an {@link Operation}
    */
   private void insertToWaitList(String txnID, Operation newOp) {
     ArrayList<Operation> transactionOps;
@@ -464,11 +340,9 @@ public class TransactionManager {
   }
 
   /**
-   * 
-   * This function is called whenever a transaction ends or aborts. Essentially this function pops a transaction from the waiting
-   * queue of the current transaction and executes its operations which were waiting for the ended or aborted transaction.
-   * 
-   * @param txnID
+   * <strong>executeOrInformWaitingTransaction</strong>: this function is called whenever a {@link Transaction} ends or aborts. Essentially this function pops a {@link Transaction} from the waiting
+   * queue of the current {@link Transaction} and executes its {@link Operation}(s) which were waiting for the ended or aborted {@link Transaction}.
+   * @param txnID - the id  of a {@link Transaction}
    */
   private void executeOrInformWaitingTransaction(String txnID) {
     Transaction presentTransaction = this.currentTransactions.get(txnID);
@@ -503,14 +377,13 @@ public class TransactionManager {
     }
   }
   
-  /**
-   * When making a transaction wait for another transaction, there is a possibility of a cycle leading
-   * to a deadlock. This function gets the waiting transaction of a given transaction. Then it iteratively loops and
-   * finds the waiting transaction of the waiting transaction. If it comes across a null value, it means there is no cycle
-   * however if we get the same value which we started off with, then a cycle exists and we abort the youngest transaction
-   * from the deadlock cycle.
+  /**<strong>checkIfCycleExists</strong>: when making a {@link Transaction} wait for another {@link Transaction}, 
+   * there is a possibility of a cycle leading to a deadlock. This function gets the waiting {@link Transaction} 
+   * of a given {@link Transaction}. Then it iteratively loops and finds the waiting {@link Transaction} of the waiting {@link Transaction}. 
+   * If it comes across a null value, it means there is no cycle, however, if we get the same value which we started off with, 
+   * then a cycle exists and we abort the youngest {@link Transaction} from the deadlock cycle.
    * 
-   * @param txnID
+   * @param txnID - the id  of a {@link Transaction}
    */
   private void checkIfCycleExists(String txnID) {
     boolean cycleExists = false;
@@ -539,11 +412,9 @@ public class TransactionManager {
     }
   }
 
-  /**
-   * This function aborts the youngest transaction in a particular deadlock cycle
-   * 
-   * @param txnInCycle
-   */
+ /**<strong>checkFindYoungestTransaction</strong>: the function aborts the youngest {@link Transaction} in a particular deadlock cycle
+  * @param txnInCycle - a list of {@link Transaction}(s) in a cycle
+  */
   private void checkFindYoungestTransaction(ArrayList<String> txnInCycle) {
     int youngestAge = Integer.MIN_VALUE;
     ArrayList<String> allTransactions = new ArrayList<String>(txnInCycle);
@@ -561,15 +432,12 @@ public class TransactionManager {
   }
   
   /**
-   * 
-   * This method checks if a deadlock exists. We compare a two transaction and check if a deadlock exists between them.
-   * If the transactions are waiting on each other than we abort the younger transaction.
-   * If there is no transaction waiting for the older transaction then we the transaction waits for the older transaction.
-   * However if the older transaction already has a transaction waiting for it, then the transaction waits for the waiting transaction
-   * of the older transaction.
-   * 
-   * @param txnID
-   * @param olderTxnID
+   * <strong>checkIfDeadlocked</strong>: this method checks if a deadlock exists. We compare two {@link Transaction}(s) and check if a deadlock exists between them. 
+   * If the {@link Transaction}(s) are waiting on each other, then we abort the younger {@link Transaction}. If there is no {@link Transaction} waiting for the older {@link Transaction} 
+   * then we ensure the current {@link Transaction} waits for the older {@link Transaction}. However if the older {@link Transaction} already has a {@link Transaction} waiting for it, 
+   * then the current {@link Transaction} waits for the waiting {@link Transaction} of the older {@link Transaction}.
+   * @param txnID - the id of a {@link Transaction}
+   * @param olderTxnID - the id of an older {@link Transaction}
    */
   private void checkIfDeadlocked(String txnID, String olderTxnID) {
     Transaction txn1 = this.currentTransactions.get(txnID);
@@ -610,12 +478,10 @@ public class TransactionManager {
   }
 
   /**
-   * 
-   * In case the transaction cannot obtain all write locks on a variable, this function tries to obtain
+   * <strong>obtainAllPossibleWriteLocksOnVariable</strong> In case the {@link Transaction} cannot obtain all write locks on a {@link Variable}, this function tries to obtain
    * as many write locks as possible on it.
-   * 
-   * @param varID
-   * @param txnID
+   * @param varID - the id of a {@link Variable}
+   * @param txnID - the id of a {@link Transaction}
    */
   private void obtainAllPossibleWriteLocksOnVariable(int varID, String txnID) {
     Transaction presentTxn = this.currentTransactions.get(txnID);
@@ -630,21 +496,20 @@ public class TransactionManager {
     }
   }
 
-  /**
-   * This handles the functionality of the write operation of a transaction.
-   * If a transaction does not have a write lock present on a variable, it finds the sites which have the variable.
-   * If there is an older transaction having a write lock on the variable which the current transaction needs to write on,
-   * we make the current transaction wait and check for deadlock. There is no older transaction holding a lock,
-   * we check if any locks exist on the variable at all. If no locks exists, the current transaction obtains the locks and writes to it.
-   * If locks exist and if it is by the same transaction and are read locks, then we remove the read locks and obtain write locks on it and
-   * execute the write operation. However if some other transaction has the locks, then the current transaction waits for the transaction holding
-   * the lock and deadlock is checked. If the current transaction had a write lock in the first place,
-   * we check if it has all the write locks on the variable, if yes then we execute the write or else the transaction waits till it obtains all the write locks.
-   * Essentially whenever a transaction waits, we check if a deadlock has occured and check for cycles and abort the youngest one in any given deadlock cycle.
+  /**<strong>writeTransaction</strong> This handles the functionality of the write operation of a {@link Transaction}. If a {@link Transaction} 
+   * does not have a write lock present on a {@link Variable}, it finds the {@link Site}(s) which have the {@link Variable}.
+   * If there is an older {@link Transaction} that has a write lock on the {@link Variable} which the current {@link Transaction} needs to write on,
+   * we make the current {@link Transaction} wait and check for deadlock. If there is no older {@link Transaction} holding a lock,
+   * we check if any locks exist on the {@link Variable} at all. If no locks exists, the current {@link Transaction} obtains the locks and writes to it.
+   * If the locks exist and if they are by the same {@link Transaction} and are read locks, then we remove the read locks and obtain write locks on it and
+   * execute the write operation. However if some other {@link Transaction} has the locks, then the current {@link Transaction} waits for the {@link Transaction} holding
+   * the lock and deadlock is checked. If the current {@link Transaction} had a write lock in the first place, we check if it has all the write locks on the {@link Variable}, 
+   * if yes then we execute the write or else the {@link Transaction} waits till it obtains all the write locks. Essentially whenever a {@link Transaction} waits, 
+   * we check if a deadlock has occurred and check for cycles and abort the youngest {@link Transaction} in any given deadlock cycle.
    * 
-   * @param txnID
-   * @param varID
-   * @param value
+   * @param txnID - the id of a {@link Transaction}
+   * @param varID - the id of a {@link Variable}
+   * @param value - the value of a {@link Variable}
    */
   private void writeTransaction(String txnID, int varID, int value) {
     // currentTransactions.get(txnID).addToCorrespondingVars(varID);
@@ -745,13 +610,11 @@ public class TransactionManager {
       }
     }
   }
-  
-/**
- * This returns all the sites accesses by a particular transaction for a particular variable
- * 
- * @param varID
- * @return
- */
+
+  /**<strong>getSitesAccessedByTransaction</strong>: this returns all the {@link Site}(s) accesses by a particular {@link Transaction} for a particular {@link Variable}
+   * @param varID - the id of a {@link Variable}
+   * @return all the {@link Site}(s) accesses by a particular {@link Transaction} for a particular {@link Variable}
+   */
   private ArrayList<Integer> getSitesAccessedByTransaction(int varID) {
     ArrayList<Integer> sitesAccessedByTransaction = new ArrayList<Integer>();
     for (int i = 1; i <= 10; i++) {
@@ -764,17 +627,15 @@ public class TransactionManager {
   }
 
   /**
-   * readTransaction checks if the currentTransaction started and if it is blocked. If the
-   * transaction started and is not blocked then it goes through each site's lock table and checks
-   * if a read-lock is possible. If so, it obtains the read-lock and obtains one of the variable's
-   * values. It doens't matter var will be overwritten by copies in other tables because each site
-   * has the same value. When we are finished reading, we record the operation in the Transaction's
-   * operation list (a queue) only if the read was unsuccessful. This may be because the transaction
-   * was blocked. We can then use that list to help us remember where we left off when the
-   * transaction continues.
+   * <strong>readTransaction</strong> checks if the currentTransaction started and goes through each active site's {@link LockTable} and checks
+   * if a read-lock is possible. If so, it obtains the read-lock and obtains one of the {@link Variable}'s values. When we are finished reading, 
+   * we record the {@link Operation} in the {@link Transaction}'s {@link Operation} list (a queue) only if the read was unsuccessful. This may be 
+   * because the {@link Transaction} was blocked. We can then use that list to help us remember where we left off when the {@link Transaction} continues. 
+   * If the {@link Transaction} is trying to read on a {@link Variable} on which an older {@link Transaction} is waiting to acquire a read lock, then the
+   * read waits for the write to happen. If all of the {@link Sites} containing the {@link Variable} which is to be read are down, then you abort the {@link Transaction}.
    * 
-   * @param txnID
-   * @param varID
+   * @param txnID - the id of a {@link Transaction}
+   * @param varID - the id of a {@link Variable}
    * @return value that was read or -1 if no read can happen )
    */
   private int readTransaction(String txnID, int varID) {
@@ -871,14 +732,12 @@ public class TransactionManager {
     }
   }
   
-  /**
-   * If a fail command is read by the parser, a site is made inactive. When a site becomes inactive,
-   * we cannot perform read or writes on the variable in the site until it recovers again. Thus if a transaction
-   * accessed a particular site and then the site failed, the transaction aborts.
+  /**<strong>failSite</strong>: If a fail command is read by the parser, a {@link Site} is made inactive. When a {@link Site} becomes inactive,
+   * we cannot perform read or writes on the {@link Variable}(s) in the {@link Site} until it recovers again. Thus if a {@link Transaction}
+   * accessed a particular {@link Site} and then the {@link Site} failed, the {@link Transaction} aborts.
    * 
-   * @param siteID
+   * @param siteID - the id of a {@link Site}
    */
-
 	private void failSite(int siteID) {
 		dmList.get(siteID).getSite().fail();
 
@@ -900,21 +759,17 @@ public class TransactionManager {
 	}
 
 	/**
-	 * This function recovers a failed site
-	 * 
-	 * @param siteID
+	 * </strong>recoverSite</strong>: recovers a failed {@link Site}
+	 * @param siteID - the id of a {@link Site}
 	 */
 	private void recoverSite(int siteID) {
 		dmList.get(siteID).getSite().recover();
 	}
 
-	/**
-	 * This function aborts a transaction. Whenever a transaction aborts, if the transaction has done a write operation,
-	 * we revert the intermediate value of the value back to its original value.
-	 * 
-	 * @param youngestTransaction
-	 */
-	// TODO : Fix Abort functionaltiy
+	/**<strong>abort</strong>: This function aborts a {@link Transaction}. Whenever a {@link Transaction} aborts, if the {@link Transaction} has done a write operation,
+     * we revert the intermediate value of the {@link Variable} back to its original value.
+     * @param youngestTransaction - the youngest {@link Transaction} in the deadlock cycle
+     */
 	public void abort(Transaction youngestTransaction) {
 		System.out.println("Aborted Trxn: " + youngestTransaction);
 		// add to list of aborted txns
@@ -955,11 +810,9 @@ public class TransactionManager {
         this.transactionWaitList.remove(txnID);
         currentTransactions.remove(txnID);
 	}
-
-	/**
-	 * Dumps information about all the sites to the standard output
-	 * 
-	 */
+    
+   /**<strong>dump</strong>: dumps information about all the {@link Site}(s) to the standard output
+    */
 	public void dump() {
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			// System.out.println(i);
@@ -968,11 +821,9 @@ public class TransactionManager {
 		System.out.print("\n");
 	}
 
-	/**
-	 * Dumps information about a particular site to the standard output
-	 * 
-	 * @param siteIndex
-	 */
+    /**<strong>dumpI</strong>: Dumps information about a particular {@link Site} to the standard output
+     * @param siteIndex - the id of a {@link Site}
+     */
 	public void dumpI(int siteIndex) {
 		// Do we need null checks?
 		if (allSitesMap.containsKey(siteIndex)) {
@@ -983,11 +834,9 @@ public class TransactionManager {
 	}
 
 	/**
-	 * Dumps information about a particular variable from all the sites to the standard output.
-	 * 
-	 * @param variableID
-	 */
-	//Fixed DumpX--> was not printing correctly
+     * <strong>dumpX</strong> Dumps information about a particular {@link Variable} from all the {@link Site}(s) to the standard output.
+     * @param variableID - the id of a {@link Variable}
+     */
 	public void dumpX(int variableID) {
 		for (int i = 1; i <= GlobalConstants.sites; i++) {
 			ArrayList<Variable> siteVariables = allSitesMap.get(i).getVariablesOnSite();

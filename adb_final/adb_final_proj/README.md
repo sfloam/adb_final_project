@@ -1,8 +1,5 @@
-# adb_final_project
-Advanced Database Systems Final Project
-
-# adb_final_project
-Advanced Database Systems Final Project
+#Advanced Database Systems Final Project
+Authors: Scott Floam and Pratik Karnik
 
 This project will demonstrate distributed replicated concurrency control and recovery. This project creates a light-weight, distributed database, with multiversion read consistency, deadlock detection, replication, failure, and recovery. 
 
@@ -21,3 +18,17 @@ The DataTable class holds Variables at a Site. All Sites have a DataTable that h
 The GlobalConstants class stores commonly used constant values.
 
 The LockObj class stores information about a lock held by a transaction. These locks are used to determine if a transaction can access a variable a particular site.
+
+The LockTable class contains a list of locks on Variables held by Transaction at a given Site.
+
+The Operation class stores information about each action performed in the system.
+
+The Site class consists of a DataTable that holds Variables and a LockTable corresponding with those Variables. See DataTable and LockTable for more information about these respective classes.
+
+The Transaction class keeps track of the transaction details. It holds information such as whether it is blocked, how long it has been running, the id of the transaction, and the variables corresponding to that Transaction. In addition, it also keeps a log of its operations.
+
+The Variable class keeps contains information about the data being stored across the Sites. Each Variable has an ID, value, intermediate value (used to hold information before it commits), whether it is exclusive to the Site, correspondingTransactions (Transactions that use this variable), and other critical information about the data used in this system.
+
+The TransactionManager class assigns each operation provided by the user's text file or operations entered directly by the user. The TransactionManager reads the parsed operation and determines if it is a begin, beginRO, read, write, dump, fail, recover, end. Depending on the operation, the TransactionManager executes an action. The TransactionManager drives all operations. It determines which Transactions can operate, which have to wait, and which must abort. The TransactionManager also can cause sites to fail and recover. The TransactionManager is robust and understands how to detect situations where deadlock occurs. It chooses the youngest Transaction when aborting a Transaction. See the API for additional information.
+
+The ExecuteTransaction class is used to parse the operation information to send to the TransactionManager class.
