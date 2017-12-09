@@ -5,7 +5,7 @@
 ***Note to the grader**: 
 1. The authors of this project worked together on all functions. Both partners played an equal role in the design and coding of each function in this project. To avoid redundancy in mentioning authorship for each function, we specify this at the top of each class.
 
-2.This application assumes that users only provide valid operations. Please remove all **comments** in the test cases before running this program to ensure that the program does not issue undersired results. 
+2.This application assumes that users only provide valid operations. Please remove **all comments** in the test cases before running this program to ensure that the program does not issue undersired results. 
 
 To run this program, simply complete the following instructions:
 
