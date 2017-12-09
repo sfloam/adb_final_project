@@ -14,7 +14,7 @@ In the commandline enter:
   5. reprounzip directory setup RepCRec.rpz ~/adb_final_repro_unzip
   6. reprounzip directory run ~/adb_final_repro_unzip
   
-  You will then be prompted to enter a file name to test.
+  You will then be prompted to enter a file name (path) to test.
   
   Please see our **Design_Document.md** document and our **docs** folder for more information about the design and functionality of this application.
   
