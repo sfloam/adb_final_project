@@ -46,9 +46,9 @@ public class ExecuteTransactions {
         while (fileScanner.hasNextLine()) {
           String line = fileScanner.nextLine();
 
-          if (isDumpOutput(line) || (isComment(line) || isEmpty(line))) {
+          if (isDumpOutput(line) || isEmpty(line)) {
             if (isDumpOutput(line)) {
-              while (fileScanner.hasNextLine() && !isComment(fileScanner.nextLine())) {
+              while (fileScanner.hasNextLine()) {
               }
             }
           } else {
@@ -60,12 +60,6 @@ public class ExecuteTransactions {
         System.out.println("File not found!");
       }
     }
-  }
-
-  public static boolean isComment(String line) {
-    Pattern commentPattern = Pattern.compile("//");
-    Matcher commentMatcher = commentPattern.matcher(line);
-    return commentMatcher.find();
   }
 
   public static boolean isDumpOutput(String line) {
